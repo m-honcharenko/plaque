@@ -11,10 +11,6 @@ export class BadgeController {
 	@Header("Content-Type", "image/svg+xml; charset=utf-8")
 	@Header("Cache-Control", "public, max-age=300")
 	get(@Query() query: BadgeQueryDto): string {
-		return this.badges.render({
-			label: query.label,
-			value: query.value,
-			color: query.color
-		})
+		return this.badges.render(query)
 	}
 }

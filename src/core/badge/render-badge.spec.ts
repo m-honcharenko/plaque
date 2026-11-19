@@ -12,7 +12,7 @@ describe("core/badge", () => {
 
 	it("renders an svg with escaped user input", () => {
 		const svg = renderBadge(
-			normalizeConfig({ label: "<b>", value: "ok", color: "#000" })
+			normalizeConfig({ label: "<b>", value: "ok", color: "000000" })
 		)
 		expect(svg.startsWith("<svg")).toBe(true)
 		expect(svg).not.toContain("<b>")

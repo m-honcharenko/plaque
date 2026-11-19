@@ -85,6 +85,7 @@ describe("GET /badge validation", () => {
 	it.each([
 		["missing value", "label=a"],
 		["empty value", "value="],
+		["blank value", "value=%20%20"],
 		["too long label", `label=${"a".repeat(25)}&value=ok`],
 		["too long value", `value=${"a".repeat(25)}`],
 		["unknown color", "value=ok&color=banana"],

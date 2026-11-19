@@ -29,6 +29,7 @@ export class BadgeQueryDto {
 	@IsString()
 	@MinLength(1)
 	@MaxLength(LIMITS.value)
+	@Matches(/\S/, { message: "value must not be blank" })
 	value!: string
 
 	@IsOptional()
