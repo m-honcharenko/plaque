@@ -12,9 +12,10 @@
 		"start:prod": "bun dist/main.js",
 		"build": "bun build src/main.ts --target bun --packages external --outdir dist",
 		"typecheck": "tsc --noEmit",
-		"lint": "oxlint --type-aware src/ test/",
+		"lint": "oxlint --type-aware src/ test/ scripts/",
 		"format": "oxfmt",
 		"format:check": "oxfmt --check",
+		"render:check": "bun scripts/render-check.ts",
 		"test": "bun test ./src",
 		"test:e2e": "bun test ./test"
 	},

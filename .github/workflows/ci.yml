@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.x
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+      - run: bun run test:e2e
+      - run: bun run build
+      - run: bun run render:check
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: render-screenshots
+          path: .render/*.png
+          if-no-files-found: ignore

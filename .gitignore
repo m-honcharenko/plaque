@@ -51,3 +51,6 @@ lerna-debug.log*
 # Python bytecode (Posting scripts)
 __pycache__/
 *.pyc
+
+# Render check output
+/.render
