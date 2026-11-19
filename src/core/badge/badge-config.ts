@@ -61,10 +61,15 @@ export function colorHex(color: BadgeColor): string {
 	return color.type === "token" ? PALETTE[color.name] : color.value
 }
 
+// Collapses any whitespace run (tabs, newlines) into one space.
+export function normalizeText(text: string): string {
+	return text.replace(/\s+/g, " ").trim()
+}
+
 export function normalizeConfig(input: BadgeInput): BadgeConfig {
 	return {
-		label: (input.label ?? "").trim(),
-		value: input.value.trim(),
+		label: normalizeText(input.label ?? ""),
+		value: normalizeText(input.value),
 		color: normalizeColor(input.color),
 		icon: input.icon ? input.icon : null,
 		theme: input.theme ?? DEFAULTS.theme,

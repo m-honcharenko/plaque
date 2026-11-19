@@ -25,6 +25,12 @@ describe("normalizeConfig", () => {
 		expect(config.value).toBe("passing")
 	})
 
+	it("collapses inner whitespace, tabs and newlines", () => {
+		const config = normalizeConfig({ label: "a \t b", value: "x\n\ny" })
+		expect(config.label).toBe("a b")
+		expect(config.value).toBe("x y")
+	})
+
 	it("keeps explicit options", () => {
 		const config = normalizeConfig({
 			value: "ok",

@@ -100,3 +100,39 @@ describe("GET /badge validation", () => {
 		expect(res.statusCode).toBe(400)
 	})
 })
+
+describe("GET /badge injection", () => {
+	let app: NestFastifyApplication
+
+	beforeEach(async () => {
+		const moduleRef = await Test.createTestingModule({
+			imports: [AppModule]
+		}).compile()
+		app = moduleRef.createNestApplication<NestFastifyApplication>(
+			new FastifyAdapter()
+		)
+		await app.init()
+		await app.getHttpAdapter().getInstance().ready()
+	})
+
+	afterEach(async () => {
+		await app.close()
+	})
+
+	it.each([
+		[
+			"closing svg and script",
+			"value=%3C%2Fsvg%3E%3Cscript%3Ex%3C%2Fscript%3E"
+		],
+		["attribute breakout", "value=%22%20onload%3D%22x"],
+		["label payload", "label=%3Cimg%20src%3Dx%3E&value=ok"],
+		["control character", "value=a%01b"]
+	])("returns safe svg for %s", async (_name, query) => {
+		const res = await app.inject({ method: "GET", url: `/badge?${query}` })
+		expect(res.statusCode).toBe(200)
+		expect(res.body).not.toContain("<script")
+		expect(res.body).not.toContain("<img")
+		expect(res.body).not.toContain('onload="x')
+		expect(res.body).not.toContain("\u0001")
+	})
+})

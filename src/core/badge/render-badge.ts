@@ -1,7 +1,14 @@
 import { colorHex, type BadgeConfig } from "./badge-config.js"
 
+// Characters that are not allowed in XML 1.0 at all: even escaped they
+// make the whole SVG unparsable, so they are dropped, not escaped.
+const INVALID_XML_CHARS =
+	// oxlint-disable-next-line no-control-regex
+	/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g
+
 export function escapeXml(text: string): string {
 	return text
+		.replace(INVALID_XML_CHARS, "")
 		.replaceAll("&", "&amp;")
 		.replaceAll("<", "&lt;")
 		.replaceAll(">", "&gt;")
