@@ -7,6 +7,7 @@ import {
 import { Test } from "@nestjs/testing"
 
 import { AppModule } from "../src/app.module.js"
+import { setupSwagger } from "../src/swagger.js"
 
 describe("App (e2e)", () => {
 	let app: NestFastifyApplication
@@ -137,5 +138,54 @@ describe("GET /badge injection", () => {
 		expect(res.body).not.toContain("<img")
 		expect(res.body).not.toContain('onload="x')
 		expect(res.body).not.toContain("\u0001")
+	})
+})
+
+describe("Swagger", () => {
+	let app: NestFastifyApplication
+
+	beforeEach(async () => {
+		const moduleRef = await Test.createTestingModule({
+			imports: [AppModule]
+		}).compile()
+		app = moduleRef.createNestApplication<NestFastifyApplication>(
+			new FastifyAdapter()
+		)
+		setupSwagger(app)
+		await app.init()
+		await app.getHttpAdapter().getInstance().ready()
+	})
+
+	afterEach(async () => {
+		await app.close()
+	})
+
+	it("documents GET /badge with its params and responses", async () => {
+		const res = await app.inject({ method: "GET", url: "/docs-json" })
+		expect(res.statusCode).toBe(200)
+		const op = res.json().paths["/badge"].get
+		const names = op.parameters.map((p: { name: string }) => p.name)
+		expect(names).toEqual(
+			expect.arrayContaining([
+				"label",
+				"value",
+				"color",
+				"icon",
+				"theme",
+				"layout"
+			])
+		)
+		const value = op.parameters.find(
+			(p: { name: string }) => p.name === "value"
+		)
+		expect(value.required).toBe(true)
+		expect(op.responses["200"].content["image/svg+xml"]).toBeDefined()
+		expect(op.responses["400"].content["image/svg+xml"]).toBeDefined()
+	})
+
+	it("serves the UI at /docs", async () => {
+		const res = await app.inject({ method: "GET", url: "/docs" })
+		expect(res.statusCode).toBe(200)
+		expect(res.headers["content-type"]).toContain("text/html")
 	})
 })
