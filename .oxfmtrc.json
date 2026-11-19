@@ -13,5 +13,5 @@
 	"singleAttributePerLine": true,
 	"sortImports": true,
 	"sortPackageJson": false,
-	"ignorePatterns": ["dist", "coverage", "node_modules", "bun.lock"]
+	"ignorePatterns": ["fixtures", "dist", "coverage", "node_modules", "bun.lock"]
 }

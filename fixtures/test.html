@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Plaque badge: variants</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 24px; color: #1f2328; }
+  h2 { font-size: 14px; margin: 24px 0 8px; }
+  .row { display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; color: #57606a; margin-top: 6px; }
+  img { display: block; }
+  .zoom img { width: calc(var(--w) * 2px); height: auto; }
+</style>
+<h2>Status only (value is a status)</h2>
+<div class="row">
+  <figure><img src="status-full.svg" alt="build: passing"><figcaption>full</figcaption></figure>
+  <figure><img src="status-compact.svg" alt="build: passing"><figcaption>compact: icon | status icon</figcaption></figure>
+</div>
+<h2>With data (value is text)</h2>
+<div class="row">
+  <figure><img src="data-full.svg" alt="release: v2.4.1"><figcaption>full</figcaption></figure>
+  <figure><img src="data-vertical.svg" alt="release: v2.4.1"><figcaption>vertical: icon / data</figcaption></figure>
+</div>
+<h2>Same, zoomed 2x</h2>
+<div class="row zoom">
+  <figure style="--w: 149"><img src="status-full.svg" alt=""></figure>
+  <figure style="--w: 72"><img src="status-compact.svg" alt=""></figure>
+  <figure style="--w: 151"><img src="data-full.svg" alt=""></figure>
+  <figure style="--w: 60"><img src="data-vertical.svg" alt=""></figure>
+</div>
