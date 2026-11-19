@@ -95,9 +95,12 @@ describe("GET /badge validation", () => {
 		["unknown theme", "value=ok&theme=sepia"],
 		["unknown layout", "value=ok&layout=huge"],
 		["repeated label", "label=a&label=b&value=ok"]
-	])("rejects %s with 400", async (_name, query) => {
+	])("rejects %s with 400 and an error badge", async (_name, query) => {
 		const res = await get(query)
 		expect(res.statusCode).toBe(400)
+		expect(res.headers["content-type"]).toContain("image/svg+xml")
+		expect(res.body.startsWith("<svg")).toBe(true)
+		expect(res.body).toContain("error: invalid params")
 	})
 })
 

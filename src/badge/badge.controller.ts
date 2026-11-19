@@ -1,9 +1,11 @@
-import { Controller, Get, Header, Query } from "@nestjs/common"
+import { Controller, Get, Header, Query, UseFilters } from "@nestjs/common"
 
+import { BadgeErrorFilter } from "./badge-error.filter.js"
 import { BadgeService } from "./badge.service.js"
 import { BadgeQueryDto } from "./dto/badge-query.dto.js"
 
 @Controller("badge")
+@UseFilters(BadgeErrorFilter)
 export class BadgeController {
 	constructor(private readonly badges: BadgeService) {}
 
