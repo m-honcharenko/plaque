@@ -20,7 +20,11 @@
 								"message": "core must not depend on NestJS"
 							},
 							{
-								"group": ["**/badge/*", "**/infra/*", "**/health/*"],
+								"group": [
+									"../../badge/**",
+									"../../infra/**",
+									"../../health/**"
+								],
 								"message": "core must not import outer layers"
 							}
 						]

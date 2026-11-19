@@ -13,5 +13,12 @@
 	"singleAttributePerLine": true,
 	"sortImports": true,
 	"sortPackageJson": false,
-	"ignorePatterns": ["fixtures", "dist", "coverage", "node_modules", "bun.lock"]
+	"ignorePatterns": [
+		"fixtures",
+		"dist",
+		"coverage",
+		"node_modules",
+		"bun.lock",
+		"src/core/icons/icons.data.ts"
+	]
 }
