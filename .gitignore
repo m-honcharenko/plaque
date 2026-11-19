@@ -1,0 +1,53 @@
+# Build output
+/dist
+/build
+/src/generated
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Dependencies
+/node_modules
+
+# Tests
+/coverage
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment variables
+.env*
+!.env.template
+
+# Temp
+.temp
+.tmp
+
+# Python bytecode (Posting scripts)
+__pycache__/
+*.pyc

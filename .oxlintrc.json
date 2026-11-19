@@ -1,0 +1,32 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"rules": {
+		"typescript/no-explicit-any": "off",
+		"typescript/no-floating-promises": "error"
+	},
+	"env": {
+		"node": true
+	},
+	"overrides": [
+		{
+			"files": ["src/core/**"],
+			"rules": {
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["@nestjs/*"],
+								"message": "core must not depend on NestJS"
+							},
+							{
+								"group": ["**/badge/*", "**/infra/*", "**/health/*"],
+								"message": "core must not import outer layers"
+							}
+						]
+					}
+				]
+			}
+		}
+	]
+}

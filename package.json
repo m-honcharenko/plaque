@@ -1,0 +1,38 @@
+{
+	"name": "plaque",
+	"version": "0.0.1",
+	"description": "",
+	"author": "",
+	"private": true,
+	"license": "UNLICENSED",
+	"type": "module",
+	"scripts": {
+		"start": "bun src/main.ts",
+		"start:dev": "bun --watch src/main.ts",
+		"start:prod": "bun dist/main.js",
+		"build": "bun build src/main.ts --target bun --packages external --outdir dist",
+		"typecheck": "tsc --noEmit",
+		"lint": "oxlint --type-aware src/ test/",
+		"format": "oxfmt",
+		"format:check": "oxfmt --check",
+		"test": "bun test ./src",
+		"test:e2e": "bun test ./test"
+	},
+	"dependencies": {
+		"@nestjs/common": "^12.5.1",
+		"@nestjs/core": "^12.5.1",
+		"@nestjs/platform-fastify": "^12.5.1",
+		"reflect-metadata": "^0.2.2",
+		"rxjs": "^7.8.2"
+	},
+	"devDependencies": {
+		"@nestjs/cli": "^12.0.13",
+		"@nestjs/schematics": "^12.0.13",
+		"@nestjs/testing": "^12.5.1",
+		"@types/bun": "^1.4.4",
+		"oxfmt": "^0.79.0",
+		"oxlint": "^1.94.0",
+		"oxlint-tsgolint": "^7.0.2007",
+		"typescript": "^7.0.2"
+	}
+}
