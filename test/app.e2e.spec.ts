@@ -78,6 +78,13 @@ describe("GET /badge validation", () => {
 		expect(res.statusCode).toBe(200)
 	})
 
+	it("accepts brand and ui icons from the whitelist", async () => {
+		for (const icon of ["check", "github", "git-branch"]) {
+			const res = await get(`value=ok&icon=${icon}`)
+			expect(res.statusCode).toBe(200)
+		}
+	})
+
 	it("accepts hex color without #", async () => {
 		const res = await get("value=ok&color=2DA44E")
 		expect(res.statusCode).toBe(200)
@@ -93,6 +100,10 @@ describe("GET /badge validation", () => {
 		["hex with #", "value=ok&color=%232da44e"],
 		["short hex", "value=ok&color=2da"],
 		["bad icon name", "value=ok&icon=Check!"],
+		["unknown icon name", "value=ok&icon=nope"],
+		["uppercase icon name", "value=ok&icon=Check"],
+		["prototype icon name", "value=ok&icon=__proto__"],
+		["empty icon name", "value=ok&icon="],
 		["unknown theme", "value=ok&theme=sepia"],
 		["unknown layout", "value=ok&layout=huge"],
 		["repeated label", "label=a&label=b&value=ok"]
