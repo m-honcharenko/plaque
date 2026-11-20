@@ -1,9 +1,9 @@
-// Generates src/core/icons/icons.data.ts and THIRD_PARTY_LICENSES.md from
-// the icon packages. Run: bun run icons:generate
+// Generates src/core/icons/icons.data.ts from the icon packages.
+// Run: bun run icons:generate
 //
 // The packages are devDependencies only: the whitelist below decides which
 // paths are copied into the repo, so the runtime never loads a whole set.
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 
 const require = createRequire(import.meta.url)
@@ -111,34 +111,6 @@ import type { IconData } from "./icons.js"
 export const ICON_DATA = {
 ${body}
 } as const satisfies Record<string, IconData>
-`
-)
-
-const license = (pkg: string) =>
-	readFileSync(`node_modules/${pkg}/LICENSE`, "utf8").trim()
-const version = (pkg: string) =>
-	(
-		JSON.parse(readFileSync(`node_modules/${pkg}/package.json`, "utf8")) as {
-			version: string
-		}
-	).version
-
-writeFileSync(
-	"THIRD_PARTY_LICENSES.md",
-	`# Third-party licenses
-
-The icon paths in \`src/core/icons/icons.data.ts\` are copied from the packages
-below. Regenerate with \`bun run icons:generate\`.
-
-## Octicons (@primer/octicons ${version("@primer/octicons")}), MIT
-
-${license("@primer/octicons")}
-
-## Simple Icons (simple-icons ${version("simple-icons")}), CC0-1.0
-
-Brand icons are public domain as artwork, but the brands themselves are
-trademarks of their owners. See the Simple Icons legal disclaimer:
-https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md
 `
 )
 

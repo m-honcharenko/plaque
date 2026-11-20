@@ -19,6 +19,7 @@
 		"coverage",
 		"node_modules",
 		"bun.lock",
-		"src/core/icons/icons.data.ts"
+		"src/core/icons/icons.data.ts",
+		"src/core/text/metrics.data.ts"
 	]
 }

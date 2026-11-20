@@ -17,6 +17,9 @@
 		"format:check": "oxfmt --check",
 		"render:check": "bun scripts/render-check.ts",
 		"icons:generate": "bun scripts/gen-icons.ts",
+		"fonts:generate": "bun scripts/gen-font-metrics.ts",
+		"licenses:generate": "bun scripts/gen-licenses.ts",
+		"generate": "bun run icons:generate && bun run fonts:generate && bun run licenses:generate",
 		"test": "bun test ./src",
 		"test:e2e": "bun test ./test"
 	},
@@ -32,11 +35,13 @@
 		"rxjs": "^7.8.2"
 	},
 	"devDependencies": {
+		"@fontsource/inter": "^5.3.0",
 		"@nestjs/cli": "^12.0.13",
 		"@nestjs/schematics": "^12.0.13",
 		"@nestjs/testing": "^12.5.1",
 		"@primer/octicons": "^19.42.0",
 		"@types/bun": "^1.4.4",
+		"opentype.js": "^2.0.0",
 		"oxfmt": "^0.79.0",
 		"oxlint": "^1.94.0",
 		"oxlint-tsgolint": "^7.0.2007",
