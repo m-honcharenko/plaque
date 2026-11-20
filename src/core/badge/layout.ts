@@ -2,6 +2,7 @@ import { measure, type FontWeight } from "../text/measure.js"
 import { truncateToWidth } from "../text/truncate.js"
 import type { BadgeConfig } from "./badge-config.js"
 import type { Layout } from "./badge-options.js"
+import { STATUS_ICONS, statusOf } from "./value-kind.js"
 
 // All numbers are px and come from the reference fixtures.
 const ICON = 16 // every icon is drawn 16px wide
@@ -24,8 +25,14 @@ export const TEXT_CAP = {
 
 export type Box = { x: number; y: number; width: number; height: number }
 
-// The renderer scales the icon's own viewBox to `size`.
-export type IconPlacement = { x: number; y: number; size: number }
+// The renderer looks `name` up in the icon whitelist and scales the icon's
+// own viewBox to `size`.
+export type IconPlacement = {
+	name: string
+	x: number
+	y: number
+	size: number
+}
 
 export type TextPlacement = {
 	text: string // already cut to fit, not escaped yet
@@ -63,8 +70,13 @@ function baseline(top: number, height: number, size: number): number {
 	return top + Math.round((height / 2 + size * 0.36) * 2) / 2
 }
 
-function iconAt(x: number, top: number, height: number): IconPlacement {
-	return { x, y: top + (height - ICON) / 2, size: ICON }
+function iconAt(
+	name: string,
+	x: number,
+	top: number,
+	height: number
+): IconPlacement {
+	return { name, x, y: top + (height - ICON) / 2, size: ICON }
 }
 
 function textAt(
@@ -93,22 +105,22 @@ function labelSection(
 	x: number,
 	showText: boolean
 ): Section | null {
-	const hasIcon = config.icon !== null
+	const iconName = config.icon
 	const run =
 		showText && config.label !== ""
 			? fit(config.label, FONT, 400, TEXT_CAP.label)
 			: null
-	if (!hasIcon && run === null) return null
 
 	let width: number
 	let icon: IconPlacement | null = null
 	let text: TextPlacement | null = null
 	if (run === null) {
+		if (iconName === null) return null
 		width = PAD_ICON * 2 + ICON
-		icon = iconAt(x + PAD_ICON, 0, ROW)
-	} else if (hasIcon) {
+		icon = iconAt(iconName, x + PAD_ICON, 0, ROW)
+	} else if (iconName !== null) {
 		width = PAD_ICON + ICON + GAP + run.width + PAD_TEXT
-		icon = iconAt(x + PAD_ICON, 0, ROW)
+		icon = iconAt(iconName, x + PAD_ICON, 0, ROW)
 		text = textAt(run, x + PAD_ICON + ICON + GAP, 0, ROW, FONT, 400, "start")
 	} else {
 		width = PAD_TEXT * 2 + run.width
@@ -122,7 +134,19 @@ function labelSection(
 	}
 }
 
-function valueSection(config: BadgeConfig, x: number, cap: number): Section {
+// The value as text. In the compact layout a status becomes its icon.
+function valueSection(config: BadgeConfig, x: number, full: boolean): Section {
+	const status = full ? null : statusOf(config.value)
+	if (status !== null) {
+		return {
+			role: "value",
+			box: { x, y: 0, width: PAD_ICON * 2 + ICON, height: ROW },
+			icon: iconAt(STATUS_ICONS[status], x + PAD_ICON, 0, ROW),
+			text: null
+		}
+	}
+
+	const cap = full ? TEXT_CAP.value : TEXT_CAP.compactValue
 	const run = fit(config.value, FONT, 600, cap)
 	const width = PAD_TEXT * 2 + run.width
 	return {
@@ -133,7 +157,8 @@ function valueSection(config: BadgeConfig, x: number, cap: number): Section {
 	}
 }
 
-// full: [icon label | value]. compact: [icon | value], no label text.
+// full: [icon label | value]. compact: [icon | value], where a status
+// value is shown as its icon.
 function horizontal(
 	config: BadgeConfig,
 	variant: "full" | "compact"
@@ -147,11 +172,7 @@ function horizontal(
 		sections.push(label)
 		x += label.box.width
 	}
-	const value = valueSection(
-		config,
-		x,
-		full ? TEXT_CAP.value : TEXT_CAP.compactValue
-	)
+	const value = valueSection(config, x, full)
 	sections.push(value)
 
 	return { variant, width: x + value.box.width, height: ROW, sections }
@@ -159,25 +180,28 @@ function horizontal(
 
 // vertical: the icon (or the label when there is no icon) above the value.
 function vertical(config: BadgeConfig): BadgeLayout {
-	const hasIcon = config.icon !== null
+	const iconName = config.icon
 	const topRun =
-		!hasIcon && config.label !== ""
+		iconName === null && config.label !== ""
 			? fit(config.label, FONT_SMALL, 400, TEXT_CAP.verticalText)
 			: null
 	const bottomRun = fit(config.value, FONT_SMALL, 600, TEXT_CAP.verticalText)
 
 	let topWidth = 0
-	if (hasIcon) topWidth = ICON + PAD_ICON * 2
+	if (iconName !== null) topWidth = ICON + PAD_ICON * 2
 	else if (topRun !== null) topWidth = topRun.width + PAD_TEXT * 2
 	const width = Math.max(topWidth, bottomRun.width + PAD_TEXT * 2)
 
 	const sections: Section[] = []
 	let y = 0
-	if (hasIcon || topRun !== null) {
+	if (iconName !== null || topRun !== null) {
 		sections.push({
 			role: "label",
 			box: { x: 0, y: 0, width, height: ROW },
-			icon: hasIcon ? iconAt(Math.round((width - ICON) / 2), 0, ROW) : null,
+			icon:
+				iconName === null
+					? null
+					: iconAt(iconName, Math.round((width - ICON) / 2), 0, ROW),
 			text:
 				topRun === null
 					? null

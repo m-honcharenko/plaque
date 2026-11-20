@@ -49,7 +49,7 @@ describe("core/badge/layout", () => {
 				{
 					role: "label",
 					box: { x: 0, y: 0, width: 75, height: 28 },
-					icon: { x: 10, y: 6, size: 16 },
+					icon: { name: "workflow", x: 10, y: 6, size: 16 },
 					text: {
 						text: "build",
 						x: 33,
@@ -78,6 +78,29 @@ describe("core/badge/layout", () => {
 		})
 	})
 
+	// The same numbers as fixtures/status-compact.svg: [icon | status icon].
+	it("shows a status as its icon in compact, like the status fixture", () => {
+		expect(layout(STATUS, "compact")).toEqual({
+			variant: "compact",
+			width: 72,
+			height: 28,
+			sections: [
+				{
+					role: "label",
+					box: { x: 0, y: 0, width: 36, height: 28 },
+					icon: { name: "workflow", x: 10, y: 6, size: 16 },
+					text: null
+				},
+				{
+					role: "value",
+					box: { x: 36, y: 0, width: 36, height: 28 },
+					icon: { name: "check-circle", x: 46, y: 6, size: 16 },
+					text: null
+				}
+			]
+		})
+	})
+
 	// Like fixtures/data-vertical.svg: icon row 28, value row 24.
 	it("lays out vertical like the data fixture", () => {
 		expect(layout(DATA, "vertical")).toEqual({
@@ -88,7 +111,7 @@ describe("core/badge/layout", () => {
 				{
 					role: "label",
 					box: { x: 0, y: 0, width: 60, height: 28 },
-					icon: { x: 22, y: 6, size: 16 },
+					icon: { name: "tag", x: 22, y: 6, size: 16 },
 					text: null
 				},
 				{
@@ -109,18 +132,27 @@ describe("core/badge/layout", () => {
 		})
 	})
 
-	it("drops the label text in compact and keeps the icon section", () => {
-		const result = layout(STATUS, "compact")
-		expect(result.variant).toBe("compact")
-		expect(result.height).toBe(28)
-
+	it("keeps a data value as text in compact", () => {
+		const result = layout(DATA, "compact")
 		const [label, value] = result.sections
-		expect(label?.role).toBe("label")
 		expect(label?.text).toBeNull()
-		expect(label?.icon).toEqual({ x: 10, y: 6, size: 16 })
 		expect(label?.box.width).toBe(36) // 10 + 16 + 10
-		expect(value?.text?.text).toBe("passing")
+		expect(value?.icon).toBeNull()
+		expect(value?.text?.text).toBe("v2.4.1")
 		expectTiled(result)
+	})
+
+	it("picks the status icon by what the status means", () => {
+		const icon = (value: string) =>
+			layout(normalizeConfig({ value, icon: "tag" }), "compact").sections[1]
+				?.icon?.name
+		expect(icon("passing")).toBe("check-circle")
+		expect(icon("failing")).toBe("x-circle")
+		expect(icon("Warning")).toBe("alert")
+		expect(icon("building")).toBe("sync")
+		expect(icon("queued")).toBe("clock")
+		expect(icon("skipped")).toBe("skip")
+		expect(icon("cancelled")).toBe("stop")
 	})
 
 	it("tiles every variant without gaps", () => {
