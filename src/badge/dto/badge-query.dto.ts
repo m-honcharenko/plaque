@@ -11,11 +11,11 @@ import {
 import {
 	COLOR_TOKENS,
 	HEX_COLOR,
-	ICON_NAME,
 	LAYOUTS,
 	LIMITS,
 	THEMES
 } from "../../core/badge/badge-options.js"
+import { ICON_NAMES, type IconName } from "../../core/icons/icons.js"
 
 const COLOR_PATTERN = new RegExp(
 	`^(${COLOR_TOKENS.join("|")}|${HEX_COLOR.source.slice(1, -1)})$`
@@ -58,16 +58,14 @@ export class BadgeQueryDto {
 	color?: string
 
 	@ApiPropertyOptional({
-		description: "Icon name: lowercase letters, digits and dashes.",
-		maxLength: LIMITS.icon,
-		pattern: ICON_NAME.source,
+		description:
+			"Icon from the whitelist. An unknown name is an error, not a silent fallback.",
+		enum: ICON_NAMES,
 		example: "check"
 	})
 	@IsOptional()
-	@IsString()
-	@MaxLength(LIMITS.icon)
-	@Matches(ICON_NAME, { message: 'icon may contain a-z, 0-9 and "-"' })
-	icon?: string
+	@IsIn(ICON_NAMES)
+	icon?: IconName
 
 	@ApiPropertyOptional({
 		description: "Color theme. auto follows the reader's system theme.",
