@@ -1,6 +1,6 @@
 export const RATE_LIMIT_DEFAULTS = { limit: 300, windowMs: 60_000 } as const
 
-export type RateLimit = { limit: number; ttl: number }
+export type RateLimit = { limit: number; windowMs: number }
 
 function positiveInt(name: string, raw: string | undefined, fallback: number) {
 	if (raw === undefined || raw === "") return fallback
@@ -22,7 +22,7 @@ export function rateLimitFromEnv(
 			env.RATE_LIMIT_MAX,
 			RATE_LIMIT_DEFAULTS.limit
 		),
-		ttl: positiveInt(
+		windowMs: positiveInt(
 			"RATE_LIMIT_WINDOW_MS",
 			env.RATE_LIMIT_WINDOW_MS,
 			RATE_LIMIT_DEFAULTS.windowMs

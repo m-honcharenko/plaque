@@ -6,18 +6,18 @@ describe("rateLimitFromEnv", () => {
 	it("uses the defaults when nothing is set", () => {
 		expect(rateLimitFromEnv({})).toEqual({
 			limit: RATE_LIMIT_DEFAULTS.limit,
-			ttl: RATE_LIMIT_DEFAULTS.windowMs
+			windowMs: RATE_LIMIT_DEFAULTS.windowMs
 		})
 		expect(rateLimitFromEnv({ RATE_LIMIT_MAX: "" })).toEqual({
 			limit: RATE_LIMIT_DEFAULTS.limit,
-			ttl: RATE_LIMIT_DEFAULTS.windowMs
+			windowMs: RATE_LIMIT_DEFAULTS.windowMs
 		})
 	})
 
 	it("reads both values", () => {
 		expect(
 			rateLimitFromEnv({ RATE_LIMIT_MAX: "10", RATE_LIMIT_WINDOW_MS: "5000" })
-		).toEqual({ limit: 10, ttl: 5000 })
+		).toEqual({ limit: 10, windowMs: 5000 })
 	})
 
 	it.each(["0", "-1", "1.5", "abc", "10 requests", "1e3x"])(

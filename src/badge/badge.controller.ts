@@ -17,7 +17,6 @@ import {
 	ApiTags,
 	ApiTooManyRequestsResponse
 } from "@nestjs/swagger"
-import { ThrottlerGuard } from "@nestjs/throttler"
 import type { FastifyReply } from "fastify"
 
 import { BadgeErrorFilter } from "./badge-error.filter.js"
@@ -25,13 +24,14 @@ import { BadgeRateLimitFilter } from "./badge-rate-limit.filter.js"
 import { BadgeService } from "./badge.service.js"
 import { BadgeQueryDto } from "./dto/badge-query.dto.js"
 import { etagOf, matchesEtag } from "./etag.js"
+import { RateLimitGuard } from "./rate-limit.guard.js"
 
 const SVG_SCHEMA = { type: "string", format: "xml" } as const
 const CACHE_CONTROL = "public, max-age=300"
 
 @ApiTags("badge")
 @Controller("badge")
-@UseGuards(ThrottlerGuard)
+@UseGuards(RateLimitGuard)
 @UseFilters(BadgeErrorFilter, BadgeRateLimitFilter)
 export class BadgeController {
 	constructor(private readonly badges: BadgeService) {}
