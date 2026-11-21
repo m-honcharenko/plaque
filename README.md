@@ -4,23 +4,34 @@ Badges for README files that adapt to the reader's screen.
 
 <p>
   <picture>
-    <source media="(max-width: 600px)" srcset="docs/examples/build-compact.svg">
-    <img align="middle" src="docs/examples/build-full.svg" alt="build: passing">
+    <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=runtime&amp;value=Bun&amp;color=neutral&amp;icon=bun&amp;theme=auto&amp;layout=vertical">
+    <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=runtime&amp;value=Bun&amp;color=neutral&amp;icon=bun&amp;theme=auto&amp;layout=full" alt="runtime: Bun">
   </picture>
   <picture>
-    <source media="(max-width: 600px)" srcset="docs/examples/downloads-vertical.svg">
-    <img align="middle" src="docs/examples/downloads-full.svg" alt="downloads: 12.4k">
+    <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=framework&amp;value=NestJS&amp;color=neutral&amp;icon=nestjs&amp;theme=auto&amp;layout=vertical">
+    <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=framework&amp;value=NestJS&amp;color=neutral&amp;icon=nestjs&amp;theme=auto&amp;layout=full" alt="framework: NestJS">
   </picture>
-  <img align="middle" src="docs/examples/image-full.svg" alt="image: 108 MB">
-  <img align="middle" src="docs/examples/stack-full.svg" alt="stack: NestJS">
+  <picture>
+    <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=language&amp;value=TypeScript&amp;color=info&amp;icon=typescript&amp;theme=auto&amp;layout=vertical">
+    <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=language&amp;value=TypeScript&amp;color=info&amp;icon=typescript&amp;theme=auto&amp;layout=full" alt="language: TypeScript">
+  </picture>
+  <picture>
+    <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=hosted+on&amp;value=Render&amp;color=neutral&amp;icon=rocket&amp;theme=auto&amp;layout=vertical">
+    <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=hosted+on&amp;value=Render&amp;color=neutral&amp;icon=rocket&amp;theme=auto&amp;layout=full" alt="hosted on: Render">
+  </picture>
 </p>
 
-Resize the window: on a narrow screen the first badge shrinks to an icon and
-the second one stacks its value under the icon. Same badge, three layouts.
+Resize the window: on a narrow screen each badge above stacks its icon over
+the value. A status such as `passing` collapses to an icon alone instead
+(the `compact` layout).
 
 Plaque is a small stateless NestJS service. It is not a shields.io clone: the
 point is the layout that changes with the screen width, which a plain `<img>`
 cannot do on its own.
+
+Live service: <https://plaque-ziwx.onrender.com> (Swagger UI at `/docs`). It
+runs on a free Render instance that sleeps after 15 minutes without traffic,
+so the first request after a quiet period can take up to a minute.
 
 ## How the adaptation works
 
