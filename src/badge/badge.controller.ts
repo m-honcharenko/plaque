@@ -4,7 +4,8 @@ import {
 	Headers,
 	Query,
 	Res,
-	UseFilters
+	UseFilters,
+	UseGuards
 } from "@nestjs/common"
 import {
 	ApiBadRequestResponse,
@@ -13,11 +14,14 @@ import {
 	ApiOkResponse,
 	ApiOperation,
 	ApiProduces,
-	ApiTags
+	ApiTags,
+	ApiTooManyRequestsResponse
 } from "@nestjs/swagger"
+import { ThrottlerGuard } from "@nestjs/throttler"
 import type { FastifyReply } from "fastify"
 
 import { BadgeErrorFilter } from "./badge-error.filter.js"
+import { BadgeRateLimitFilter } from "./badge-rate-limit.filter.js"
 import { BadgeService } from "./badge.service.js"
 import { BadgeQueryDto } from "./dto/badge-query.dto.js"
 import { etagOf, matchesEtag } from "./etag.js"
@@ -27,7 +31,8 @@ const CACHE_CONTROL = "public, max-age=300"
 
 @ApiTags("badge")
 @Controller("badge")
-@UseFilters(BadgeErrorFilter)
+@UseGuards(ThrottlerGuard)
+@UseFilters(BadgeErrorFilter, BadgeRateLimitFilter)
 export class BadgeController {
 	constructor(private readonly badges: BadgeService) {}
 
@@ -47,6 +52,11 @@ export class BadgeController {
 	@ApiBadRequestResponse({
 		description:
 			'Invalid params. The body is a badge reading "error: invalid params".',
+		content: { "image/svg+xml": { schema: SVG_SCHEMA } }
+	})
+	@ApiTooManyRequestsResponse({
+		description:
+			'Too many requests from one client. The body is a badge reading "error: rate limited"; Retry-After says when to come back.',
 		content: { "image/svg+xml": { schema: SVG_SCHEMA } }
 	})
 	get(

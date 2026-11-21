@@ -11,7 +11,8 @@ import { setupSwagger } from "./swagger.js"
 async function bootstrap() {
 	const app = await NestFactory.create<NestFastifyApplication>(
 		AppModule,
-		new FastifyAdapter()
+		// Behind a proxy the client address comes from X-Forwarded-For.
+		new FastifyAdapter({ trustProxy: process.env.TRUST_PROXY === "true" })
 	)
 	await setupHttp(app)
 	setupSwagger(app)
