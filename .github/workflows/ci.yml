@@ -28,3 +28,19 @@ jobs:
           name: render-screenshots
           path: .render/*.png
           if-no-files-found: ignore
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build image
+        run: docker build -t plaque:ci .
+      - name: Smoke test image
+        run: |
+          docker run -d --name plaque -p 3000:3000 plaque:ci
+          for i in $(seq 1 20); do
+            curl -fsS http://localhost:3000/health && break
+            sleep 1
+          done
+          curl -fsS "http://localhost:3000/badge?label=ci&value=ok" | grep -q "<svg"
+          docker rm -f plaque
