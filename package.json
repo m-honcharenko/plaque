@@ -24,6 +24,7 @@
 		"test:e2e": "bun test ./test"
 	},
 	"dependencies": {
+		"@fastify/compress": "^9.3.0",
 		"@fastify/static": "^10.1.12",
 		"@nestjs/common": "^12.5.1",
 		"@nestjs/core": "^12.5.1",

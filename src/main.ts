@@ -5,6 +5,7 @@ import {
 } from "@nestjs/platform-fastify"
 
 import { AppModule } from "./app.module.js"
+import { setupHttp } from "./http.js"
 import { setupSwagger } from "./swagger.js"
 
 async function bootstrap() {
@@ -12,6 +13,7 @@ async function bootstrap() {
 		AppModule,
 		new FastifyAdapter()
 	)
+	await setupHttp(app)
 	setupSwagger(app)
 	await app.listen(process.env.PORT ?? 3000, "0.0.0.0")
 }
