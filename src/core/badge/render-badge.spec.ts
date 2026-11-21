@@ -1,7 +1,20 @@
 import { describe, expect, it } from "bun:test"
 
-import { normalizeConfig } from "./badge-config.js"
+import { getIcon } from "../icons/icons.js"
+import { normalizeConfig, type BadgeInput } from "./badge-config.js"
 import { escapeXml, renderBadge } from "./render-badge.js"
+
+const STATUS = normalizeConfig({
+	label: "build",
+	value: "passing",
+	icon: "workflow"
+})
+const DATA = normalizeConfig({
+	label: "release",
+	value: "v2.4.1",
+	icon: "tag",
+	color: "info"
+})
 
 describe("core/badge", () => {
 	it("escapes XML special characters", () => {
@@ -20,6 +33,79 @@ describe("core/badge", () => {
 	})
 })
 
+describe("core/badge/render-badge", () => {
+	it("sizes each layout like its reference fixture", () => {
+		expect(renderBadge(STATUS, "full")).toContain('viewBox="0 0 149 28"')
+		expect(renderBadge(STATUS, "compact")).toContain('viewBox="0 0 72 28"')
+		expect(renderBadge(DATA, "vertical")).toContain('viewBox="0 0 60 52"')
+	})
+
+	it("sets width and height equal to the viewBox", () => {
+		const svg = renderBadge(DATA, "vertical")
+		expect(svg).toContain('width="60" height="52"')
+	})
+
+	it("renders config.layout by default and lets a variant override it", () => {
+		const config = normalizeConfig({ value: "ok", layout: "vertical" })
+		expect(renderBadge(config)).toContain('viewBox="0 0 39 24"')
+		expect(renderBadge(config, "full")).toContain('viewBox="0 0 40 28"')
+	})
+
+	it("shows the label text in full only", () => {
+		expect(renderBadge(STATUS, "full")).toContain(">build</text>")
+		expect(renderBadge(STATUS, "compact")).not.toContain(">build</text>")
+		expect(renderBadge(DATA, "vertical")).not.toContain(">release</text>")
+	})
+
+	it("describes the badge for screen readers", () => {
+		const svg = renderBadge(STATUS, "compact")
+		expect(svg).toContain('aria-label="build: passing"')
+		expect(svg).toContain("<title>build: passing</title>")
+		expect(renderBadge(normalizeConfig({ value: "ok" }))).toContain(
+			'aria-label="ok"'
+		)
+	})
+
+	it("draws a whitelisted icon scaled to 16px", () => {
+		const tag = getIcon("tag")
+		const github = getIcon("github")
+		expect(tag?.size).toBe(16)
+		expect(github?.size).toBe(24)
+
+		const small = renderBadge(normalizeConfig({ value: "ok", icon: "tag" }))
+		expect(small).toContain("scale(1)")
+		expect(small).toContain(`d="${tag?.d}"`)
+
+		const big = renderBadge(normalizeConfig({ value: "ok", icon: "github" }))
+		expect(big).toContain("scale(0.6667)")
+		expect(big).toContain(`d="${github?.d}"`)
+	})
+
+	it("refuses an icon outside the whitelist", () => {
+		expect(() => renderBadge({ ...STATUS, icon: "nope" })).toThrow(RangeError)
+	})
+
+	it("paints the value side with the color", () => {
+		expect(renderBadge(STATUS)).toContain('fill="#2da44e"')
+		const custom = normalizeConfig({ value: "ok", color: "FF00AA" })
+		expect(renderBadge(custom)).toContain('fill="#ff00aa"')
+	})
+
+	it("changes the composition by variant, not by @media", () => {
+		for (const variant of ["full", "compact", "vertical"] as const) {
+			// one @media in the file: the color scheme of the label side
+			const svg = renderBadge(STATUS, variant)
+			expect((svg.match(/@media/g) ?? []).length).toBe(1)
+			expect(svg).toContain("prefers-color-scheme")
+		}
+	})
+
+	it("prints numbers without float noise", () => {
+		const svg = renderBadge(DATA, "full")
+		expect(svg).not.toMatch(/\d\.\d{3,}"/)
+	})
+})
+
 const PAYLOADS = [
 	"</svg><script>x</script>",
 	'" onload="alert(1)',
@@ -31,24 +117,29 @@ const PAYLOADS = [
 	"<?xml?>"
 ]
 
+// The same shapes with harmless text: the payload must change no markup.
+const SHAPES: ((text: string) => BadgeInput)[] = [
+	(text) => ({ label: text, value: "ok" }),
+	(text) => ({ value: text }),
+	(text) => ({ label: text, value: text }),
+	(text) => ({ label: text, value: text, icon: "tag" })
+]
+
 const tagCount = (svg: string) => (svg.match(/</g) ?? []).length
 
 describe("core/badge injection", () => {
-	const benign = renderBadge(normalizeConfig({ label: "a", value: "b" }))
-
 	it.each(PAYLOADS)("keeps markup intact for %s", (payload) => {
-		for (const config of [
-			{ label: payload, value: "ok" },
-			{ value: payload },
-			{ label: payload, value: payload }
-		]) {
-			const svg = renderBadge(normalizeConfig(config))
-			// No new tags or comments appeared, only escaped text.
-			expect(tagCount(svg)).toBe(tagCount(benign))
-			// The aria-label attribute was not broken out of.
-			expect(svg).toMatch(/^<svg [^>]*aria-label="[^"<]*"[^>]*>/)
-			expect(svg).not.toContain("<script")
-			expect(svg).not.toContain('onload="')
+		for (const shape of SHAPES) {
+			for (const variant of ["full", "compact", "vertical"] as const) {
+				const svg = renderBadge(normalizeConfig(shape(payload)), variant)
+				const benign = renderBadge(normalizeConfig(shape("a")), variant)
+				// No new tags or comments appeared, only escaped text.
+				expect(tagCount(svg)).toBe(tagCount(benign))
+				// The aria-label attribute was not broken out of.
+				expect(svg).toMatch(/^<svg [^>]*aria-label="[^"<]*"[^>]*>/)
+				expect(svg).not.toContain("<script")
+				expect(svg).not.toContain('onload="')
+			}
 		}
 	})
 
