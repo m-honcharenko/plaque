@@ -6,7 +6,10 @@ import { join } from "node:path"
 import { ICON_NAMES, getIcon } from "../icons/icons.js"
 import { normalizeConfig, type BadgeInput } from "./badge-config.js"
 import { LAYOUTS, THEMES } from "./badge-options.js"
-import { renderInvalidParamsBadge } from "./error-badge.js"
+import {
+	renderInvalidParamsBadge,
+	renderRateLimitedBadge
+} from "./error-badge.js"
 import { renderBadge } from "./render-badge.js"
 
 const ELEMENTS = new Set([
@@ -82,7 +85,7 @@ for (const icon of [undefined, ...ICON_NAMES]) {
 		}
 	}
 }
-SVGS.push(renderInvalidParamsBadge())
+SVGS.push(renderInvalidParamsBadge(), renderRateLimitedBadge())
 
 const WHITELISTED_PATHS = new Set(
 	ICON_NAMES.map((name) => getIcon(name)?.d ?? "")
