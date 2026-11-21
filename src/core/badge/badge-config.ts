@@ -36,9 +36,11 @@ export const DEFAULTS = {
 	layout: "full"
 } as const satisfies { color: ColorToken; theme: Theme; layout: Layout }
 
+// Token colors for the light scheme, tuned for white text on top. The dark
+// scheme has its own set in theme.ts.
 export const PALETTE: Record<ColorToken, string> = {
-	success: "2da44e",
-	warning: "bf8700",
+	success: "1a7f37",
+	warning: "9a6700",
 	error: "cf222e",
 	info: "0969da",
 	neutral: "6e7781"
