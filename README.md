@@ -2,16 +2,18 @@
 
 Badges for README files that adapt to the reader's screen.
 
-<picture>
-  <source media="(max-width: 600px)" srcset="docs/examples/build-compact.svg">
-  <img src="docs/examples/build-full.svg" alt="build: passing">
-</picture>
-<picture>
-  <source media="(max-width: 600px)" srcset="docs/examples/downloads-vertical.svg">
-  <img src="docs/examples/downloads-full.svg" alt="downloads: 12.4k">
-</picture>
-<img src="docs/examples/image-full.svg" alt="image: 108 MB">
-<img src="docs/examples/stack-full.svg" alt="stack: NestJS">
+<p>
+  <picture>
+    <source media="(max-width: 600px)" srcset="docs/examples/build-compact.svg">
+    <img align="middle" src="docs/examples/build-full.svg" alt="build: passing">
+  </picture>
+  <picture>
+    <source media="(max-width: 600px)" srcset="docs/examples/downloads-vertical.svg">
+    <img align="middle" src="docs/examples/downloads-full.svg" alt="downloads: 12.4k">
+  </picture>
+  <img align="middle" src="docs/examples/image-full.svg" alt="image: 108 MB">
+  <img align="middle" src="docs/examples/stack-full.svg" alt="stack: NestJS">
+</p>
 
 Resize the window: on a narrow screen the first badge shrinks to an icon and
 the second one stacks its value under the icon. Same badge, three layouts.
