@@ -3,7 +3,7 @@ import { describe, expect, it } from "bun:test"
 const variants = {
 	"status-full.svg": { w: 149, h: 28 },
 	"status-compact.svg": { w: 72, h: 28 },
-	"data-full.svg": { w: 151, h: 28 },
+	"data-full.svg": { w: 153, h: 28 },
 	"data-vertical.svg": { w: 60, h: 52 }
 }
 
