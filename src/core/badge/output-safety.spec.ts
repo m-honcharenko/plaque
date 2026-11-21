@@ -163,9 +163,12 @@ describe("generated svg is well-formed XML", () => {
 	it.skipIf(xmllint === null && !process.env.CI)(
 		"passes xmllint with no network and no entities",
 		async () => {
+			if (xmllint === null) {
+				throw new Error("xmllint not found: install libxml2-utils")
+			}
 			const proc = Bun.spawn(
 				[
-					xmllint ?? "xmllint",
+					xmllint,
 					"--noout",
 					"--nonet",
 					...SVGS.map((_, index) => join(dir, `${index}.svg`))
