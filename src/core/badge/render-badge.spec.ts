@@ -85,10 +85,33 @@ describe("core/badge/render-badge", () => {
 		expect(() => renderBadge({ ...STATUS, icon: "nope" })).toThrow(RangeError)
 	})
 
-	it("paints the value side with the color", () => {
-		expect(renderBadge(STATUS)).toContain('fill="#2da44e"')
+	it("paints the value side from the color variable", () => {
+		const svg = renderBadge(STATUS)
+		expect(svg).toContain('class="val"')
+		expect(svg).toContain("--v:#1a7f37")
 		const custom = normalizeConfig({ value: "ok", color: "FF00AA" })
-		expect(renderBadge(custom)).toContain('fill="#ff00aa"')
+		expect(renderBadge(custom)).toContain("--v:#ff00aa")
+	})
+
+	it("follows the system theme in auto", () => {
+		const svg = renderBadge({ ...STATUS, theme: "auto" })
+		expect(svg).toContain("--v:#1a7f37")
+		expect(svg).toContain("@media (prefers-color-scheme:dark)")
+		expect(svg).toContain("--v:#2ea043")
+	})
+
+	it("fixes the theme in light and dark, without @media", () => {
+		const light = renderBadge({ ...STATUS, theme: "light" })
+		expect(light).not.toContain("@media")
+		expect(light).toContain("--fg:#1f2328")
+		expect(light).toContain("--v:#1a7f37")
+		expect(light).not.toContain("#2ea043")
+
+		const dark = renderBadge({ ...STATUS, theme: "dark" })
+		expect(dark).not.toContain("@media")
+		expect(dark).toContain("--fg:#e6edf3")
+		expect(dark).toContain("--v:#2ea043")
+		expect(dark).not.toContain("#1a7f37")
 	})
 
 	it("changes the composition by variant, not by @media", () => {
