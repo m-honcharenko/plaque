@@ -19,6 +19,10 @@ Badges for README files that adapt to the reader's screen.
     <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=hosted+on&amp;value=Render&amp;color=neutral&amp;icon=rocket&amp;theme=auto&amp;layout=vertical">
     <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=hosted+on&amp;value=Render&amp;color=neutral&amp;icon=rocket&amp;theme=auto&amp;layout=full" alt="hosted on: Render">
   </picture>
+  <picture>
+    <source media="(max-width: 600px)" srcset="https://plaque-ziwx.onrender.com/badge?label=license&amp;value=MIT&amp;color=neutral&amp;icon=law&amp;theme=auto&amp;layout=vertical">
+    <img align="middle" src="https://plaque-ziwx.onrender.com/badge?label=license&amp;value=MIT&amp;color=neutral&amp;icon=law&amp;theme=auto&amp;layout=full" alt="license: MIT">
+  </picture>
 </p>
 
 Resize the window: on a narrow screen each badge above stacks its icon over
@@ -238,6 +242,10 @@ package manager, bundler, tests), Oxc, GitHub Actions.
 - GitHub: `<picture>` keeps `media` on `<source>`. At 592 px the narrow layout
   shows, at 648 px the full one.
 - Other platforms (GitLab, Codeberg, Bitbucket): not checked yet.
+
+## License
+
+[MIT](LICENSE). Third-party licenses are listed in the Credits below.
 
 ## Credits
 
