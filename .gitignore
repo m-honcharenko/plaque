@@ -54,3 +54,6 @@ __pycache__/
 
 # Render check output
 /.render
+
+# Benchmark output
+/.bench
