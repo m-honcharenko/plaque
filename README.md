@@ -21,8 +21,9 @@ Badges for README files that adapt to the reader's screen.
   </picture>
 </p>
 
-Resize the window: on a narrow screen the first badge shrinks to an icon and
-the second one stacks its value under the icon. Same badge, three layouts.
+Resize the window: on a narrow screen each badge above stacks its icon over
+the value. A status such as `passing` collapses to an icon alone instead
+(the `compact` layout).
 
 Plaque is a small stateless NestJS service. It is not a shields.io clone: the
 point is the layout that changes with the screen width, which a plain `<img>`
