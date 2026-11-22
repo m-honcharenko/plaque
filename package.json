@@ -10,9 +10,12 @@
 		"start": "bun src/main.ts",
 		"start:dev": "bun --watch src/main.ts",
 		"start:prod": "bun dist/main.js",
-		"build": "bun build src/main.ts --target bun --packages external --outdir dist",
+		"build": "bun run build:server && bun run build:web",
+		"build:server": "bun build src/main.ts --target bun --packages external --outdir dist",
+		"build:web": "bun scripts/build-web.ts",
+		"dev:web": "bun scripts/build-web.ts --watch",
 		"typecheck": "tsc --noEmit",
-		"lint": "oxlint --type-aware src/ test/ scripts/",
+		"lint": "oxlint --type-aware src/ test/ scripts/ web/",
 		"format": "oxfmt",
 		"format:check": "oxfmt --check",
 		"render:check": "bun scripts/render-check.ts",
@@ -21,7 +24,7 @@
 		"fonts:generate": "bun scripts/gen-font-metrics.ts",
 		"licenses:generate": "bun scripts/gen-licenses.ts",
 		"generate": "bun run icons:generate && bun run fonts:generate && bun run licenses:generate",
-		"test": "bun test ./src",
+		"test": "bun test ./src ./web",
 		"test:e2e": "bun test ./test"
 	},
 	"dependencies": {
@@ -45,11 +48,14 @@
 		"@types/autocannon": "^7.12.7",
 		"@types/bun": "^1.4.4",
 		"autocannon": "^9.0.0",
+		"bun-plugin-tailwind": "^0.1.2",
 		"opentype.js": "^2.0.0",
 		"oxfmt": "^0.79.0",
 		"oxlint": "^1.94.0",
 		"oxlint-tsgolint": "^7.0.2007",
+		"preact": "^11.2.0",
 		"simple-icons": "^16.38.0",
+		"tailwindcss": "^4.3.5",
 		"typescript": "^7.0.2"
 	}
 }

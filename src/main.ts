@@ -4,6 +4,7 @@ import type { NestFastifyApplication } from "@nestjs/platform-fastify"
 import { AppModule } from "./app.module.js"
 import { createAdapter, setupHttp } from "./http.js"
 import { setupSwagger } from "./swagger.js"
+import { setupWeb } from "./web.js"
 
 async function bootstrap() {
 	const app = await NestFactory.create<NestFastifyApplication>(
@@ -12,6 +13,7 @@ async function bootstrap() {
 	)
 	await setupHttp(app)
 	setupSwagger(app)
+	await setupWeb(app)
 	await app.listen(process.env.PORT ?? 3000, "0.0.0.0")
 }
 await bootstrap()
