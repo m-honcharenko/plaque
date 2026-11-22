@@ -214,6 +214,7 @@ the rate limiter problem was found.
 | `RATE_LIMIT_MAX`       | `300`        | Requests per client per window                 |
 | `RATE_LIMIT_WINDOW_MS` | `60000`      | Window length                                  |
 | `BADGE_CACHE_SIZE`     | `1000`       | Rendered badges kept in memory, `0` disables   |
+| `WEB_DIR`              | `dist/web`   | Built web app served at `/`, skipped if absent |
 
 A bad value stops the service at start instead of silently turning a limit
 off.
@@ -222,6 +223,8 @@ off.
 
 ```sh
 bun run start:dev     # watch mode
+bun run build         # server and web bundle into dist/
+bun run dev:web       # rebuild the web app on change
 bun run format        # oxfmt
 bun run typecheck     # tsc --noEmit
 bun run lint          # oxlint, type-aware

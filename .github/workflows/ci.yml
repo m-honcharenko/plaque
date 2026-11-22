@@ -43,4 +43,5 @@ jobs:
             sleep 1
           done
           curl -fsS "http://localhost:3000/badge?label=ci&value=ok" | grep -q "<svg"
+          curl -fsS http://localhost:3000/ | grep -q 'id="app"'
           docker rm -f plaque

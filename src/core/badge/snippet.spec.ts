@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test"
 
 import { normalizeConfig, type BadgeInput } from "./badge-config.js"
-import { badgeUrl, renderSnippet } from "./snippet.js"
+import { badgeUrl, renderSnippet, type SnippetOptions } from "./snippet.js"
 
 const ORIGIN = "https://plaque.example"
-const OPTIONS = { origin: ORIGIN, breakpoint: 600 }
+const OPTIONS: SnippetOptions = { origin: ORIGIN, breakpoint: 600 }
 
 function snippetOf(input: BadgeInput, options = OPTIONS): string {
 	return renderSnippet(normalizeConfig(input), options)
@@ -38,6 +38,17 @@ describe("renderSnippet", () => {
 		)
 		expect(new URL(narrow).searchParams.get("layout")).toBe("vertical")
 		expect(new URL(full).searchParams.get("layout")).toBe("full")
+	})
+
+	it("lets the caller force the narrow layout", () => {
+		const status = urls(
+			snippetOf({ value: "passing" }, { ...OPTIONS, narrow: "vertical" })
+		)
+		expect(new URL(status.narrow).searchParams.get("layout")).toBe("vertical")
+		const data = urls(
+			snippetOf({ value: "v2.4.1" }, { ...OPTIONS, narrow: "compact" })
+		)
+		expect(new URL(data.narrow).searchParams.get("layout")).toBe("compact")
 	})
 
 	it("puts the breakpoint into the media query", () => {

@@ -11,6 +11,15 @@ export type SnippetOptions = {
 	origin: string
 	// Viewport width in px at which the narrow layout takes over.
 	breakpoint: number
+	// Forces the narrow layout. Left out, it follows the value: a status
+	// becomes compact, data becomes vertical.
+	narrow?: NarrowLayout
+}
+
+export type NarrowLayout = Extract<Layout, "compact" | "vertical">
+
+export function pickNarrow(value: string, forced?: NarrowLayout): NarrowLayout {
+	return forced ?? narrowLayout(value)
 }
 
 // The /badge URL that renders this config in the given layout.
@@ -36,9 +45,11 @@ export function badgeUrl(
 // screens. Anything without <picture> support still gets the <img>.
 export function renderSnippet(
 	config: BadgeConfig,
-	{ origin, breakpoint }: SnippetOptions
+	{ origin, breakpoint, narrow: forced }: SnippetOptions
 ): string {
-	const narrow = escapeXml(badgeUrl(origin, config, narrowLayout(config.value)))
+	const narrow = escapeXml(
+		badgeUrl(origin, config, pickNarrow(config.value, forced))
+	)
 	const full = escapeXml(badgeUrl(origin, config, "full"))
 	const alt = escapeXml(
 		config.label === "" ? config.value : `${config.label}: ${config.value}`

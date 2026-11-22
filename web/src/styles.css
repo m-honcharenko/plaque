@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* The page theme is a class on <html>, set by the switch, so "dark:" follows
+   the switch and not only the system. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+	html {
+		color-scheme: light;
+	}
+
+	html.dark {
+		color-scheme: dark;
+	}
+
+	body {
+		@apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+	}
+}
