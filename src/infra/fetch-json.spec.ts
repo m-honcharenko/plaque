@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test"
 
 import { ValueError } from "../core/ports/value-provider.port.js"
-import { fetchJson, type FetchLike } from "./fetch-json.js"
+import { fetchJson, RateLimited, type FetchLike } from "./fetch-json.js"
 
 const URL_OK = new URL("https://registry.npmjs.org/react/latest")
 
@@ -76,6 +76,13 @@ describe("fetchJson", () => {
 		}
 	)
 
+	it("maps a plain 403 to unavailable, not to a rate limit", async () => {
+		const { fetch } = fakeFetch(new Response("blocked", { status: 403 }))
+		const error = await failure(fetchJson(URL_OK, { fetch }))
+		expect(error).toBeInstanceOf(ValueError)
+		expect(error).not.toBeInstanceOf(RateLimited)
+	})
+
 	it("maps a network error to unavailable", async () => {
 		const fetch: FetchLike = async () => {
 			throw new TypeError("connection reset")
@@ -148,9 +155,91 @@ describe("fetchJson: size limit", () => {
 	})
 })
 
+describe("fetchJson: rate limits", () => {
+	const GITHUB = new URL("https://api.github.com/repos/o/r")
+
+	it("reads how long to wait from retry-after", async () => {
+		const { fetch } = fakeFetch(
+			new Response("slow down", {
+				status: 429,
+				headers: { "retry-after": "30" }
+			})
+		)
+		const error = await failure(fetchJson(URL_OK, { fetch }))
+		expect(error).toBeInstanceOf(RateLimited)
+		expect(error).toBeInstanceOf(ValueError)
+		expect((error as RateLimited).reason).toBe("unavailable")
+		expect((error as RateLimited).retryAfterMs).toBe(30_000)
+	})
+
+	it("recognizes GitHub's used-up quota and waits until the reset", async () => {
+		const reset = Math.floor(Date.now() / 1000) + 120
+		const { fetch } = fakeFetch(
+			new Response("{}", {
+				status: 403,
+				headers: {
+					"x-ratelimit-remaining": "0",
+					"x-ratelimit-reset": String(reset)
+				}
+			})
+		)
+		const error = await failure(fetchJson(GITHUB, { fetch }))
+		expect(error).toBeInstanceOf(RateLimited)
+		const wait = (error as RateLimited).retryAfterMs
+		expect(wait).toBeGreaterThan(100_000)
+		expect(wait).toBeLessThanOrEqual(120_000)
+	})
+
+	it("falls back to a minute when the answer gives no time", async () => {
+		const { fetch } = fakeFetch(new Response("x", { status: 429 }))
+		const error = await failure(fetchJson(URL_OK, { fetch }))
+		expect((error as RateLimited).retryAfterMs).toBe(60_000)
+	})
+
+	it("does not call a 403 with quota left a rate limit", async () => {
+		const { fetch } = fakeFetch(
+			new Response("{}", {
+				status: 403,
+				headers: { "x-ratelimit-remaining": "42" }
+			})
+		)
+		const error = await failure(fetchJson(GITHUB, { fetch }))
+		expect(error).not.toBeInstanceOf(RateLimited)
+	})
+})
+
 describe("fetchJson: redirects", () => {
 	const redirect = (location: string, status = 301) =>
 		new Response(null, { status, headers: { location } })
+
+	it("keeps the authorization header on the same host", async () => {
+		const { fetch, calls } = fakeFetch(redirect("/repositories/42"), json({}))
+		const url = new URL("https://api.github.com/repos/o/r")
+		await fetchJson(url, { fetch, headers: { authorization: "Bearer x" } })
+		for (const call of calls) {
+			expect(new Headers(call.init.headers).get("authorization")).toBe(
+				"Bearer x"
+			)
+		}
+	})
+
+	it("leaves the authorization header out after a change of host", async () => {
+		const { fetch, calls } = fakeFetch(
+			redirect("https://registry.npmjs.org/x"),
+			json({})
+		)
+		const url = new URL("https://api.github.com/repos/o/r")
+		await fetchJson(url, {
+			fetch,
+			headers: { Authorization: "Bearer x", "x-other": "kept" }
+		})
+		expect(calls).toHaveLength(2)
+		const first = new Headers(calls[0]?.init.headers)
+		const second = new Headers(calls[1]?.init.headers)
+		expect(first.get("authorization")).toBe("Bearer x")
+		expect(second.get("authorization")).toBeNull()
+		expect(second.get("x-other")).toBe("kept")
+	})
 
 	it("follows a redirect to another allowed address", async () => {
 		const { fetch, calls } = fakeFetch(

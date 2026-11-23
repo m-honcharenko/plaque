@@ -10,11 +10,23 @@ export const FETCH_LIMITS = {
 	maxRedirects: 3
 } as const
 
+// Used when the upstream says it is rate limited but not for how long.
+const DEFAULT_RETRY_AFTER_MS = 60_000
+
 export type FetchJsonOptions = {
 	timeoutMs?: number
 	maxBytes?: number
 	headers?: Record<string, string>
 	fetch?: FetchLike
+}
+
+// The upstream refused because we asked too much. It is an unavailable
+// failure that also says how long to leave the upstream alone.
+export class RateLimited extends ValueError {
+	constructor(readonly retryAfterMs: number) {
+		super("unavailable", "Rate limited by the upstream")
+		this.name = "RateLimited"
+	}
 }
 
 const REDIRECTS = new Set([301, 302, 303, 307, 308])
@@ -26,6 +38,39 @@ function unavailable(message: string): ValueError {
 // Drops what is left of a response we will not read.
 function discard(response: Response): void {
 	void response.body?.cancel().catch(() => undefined)
+}
+
+// Credentials go only to the host they were meant for: after a redirect to
+// another host they are left out.
+function headersFor(
+	headers: Record<string, string>,
+	target: URL,
+	origin: URL
+): Record<string, string> {
+	if (target.hostname === origin.hostname) return headers
+	return Object.fromEntries(
+		Object.entries(headers).filter(
+			([name]) => name.toLowerCase() !== "authorization"
+		)
+	)
+}
+
+// 429, or 403 with the quota used up (how GitHub says it). Returns how long
+// to wait, or null when the answer is not about a rate limit.
+function retryAfterMs(response: Response): number | null {
+	const limited =
+		response.status === 429 ||
+		(response.status === 403 &&
+			response.headers.get("x-ratelimit-remaining") === "0")
+	if (!limited) return null
+
+	const retryAfter = Number(response.headers.get("retry-after"))
+	if (Number.isFinite(retryAfter) && retryAfter > 0) return retryAfter * 1000
+	const reset = Number(response.headers.get("x-ratelimit-reset"))
+	if (Number.isFinite(reset) && reset > 0) {
+		return Math.max(0, reset * 1000 - Date.now())
+	}
+	return DEFAULT_RETRY_AFTER_MS
 }
 
 async function send(
@@ -73,8 +118,9 @@ async function readText(response: Response, maxBytes: number): Promise<string> {
 
 // Fetches JSON from an allowed upstream. Never throws anything but a
 // ValueError, except for a URL that is not allowed in the first place (a
-// bug in the caller): 404 is not_found, everything else that goes wrong is
-// unavailable. Redirects are followed only to other allowed addresses.
+// bug in the caller): 404 is not_found, a rate limit is RateLimited, and
+// everything else that goes wrong is unavailable. Redirects are followed
+// only to other allowed addresses.
 export async function fetchJson(
 	url: URL,
 	options: FetchJsonOptions = {}
@@ -94,7 +140,12 @@ export async function fetchJson(
 	const signal = AbortSignal.timeout(timeoutMs)
 	let current = url
 	for (let hop = 0; hop <= FETCH_LIMITS.maxRedirects; hop += 1) {
-		const response = await send(fetcher, current, headers, signal)
+		const response = await send(
+			fetcher,
+			current,
+			headersFor(headers, current, url),
+			signal
+		)
 
 		if (REDIRECTS.has(response.status)) {
 			const location = response.headers.get("location")
@@ -114,6 +165,11 @@ export async function fetchJson(
 		if (response.status === 404) {
 			discard(response)
 			throw new ValueError("not_found")
+		}
+		const wait = retryAfterMs(response)
+		if (wait !== null) {
+			discard(response)
+			throw new RateLimited(wait)
 		}
 		if (!response.ok) {
 			discard(response)
