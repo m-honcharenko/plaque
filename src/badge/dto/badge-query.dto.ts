@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
+import { Expose } from "class-transformer"
 import {
 	IsIn,
 	IsOptional,
@@ -15,7 +16,9 @@ import {
 	LIMITS,
 	THEMES
 } from "../../core/badge/badge-options.js"
+import { ICON_PATH_MAX_LENGTH } from "../../core/icons/custom-icon.js"
 import { ICON_NAMES, type IconName } from "../../core/icons/icons.js"
+import { IsIconPath } from "./is-icon-path.js"
 
 const COLOR_PATTERN = new RegExp(
 	`^(${COLOR_TOKENS.join("|")}|${HEX_COLOR.source.slice(1, -1)})$`
@@ -66,6 +69,20 @@ export class BadgeQueryDto {
 	@IsOptional()
 	@IsIn(ICON_NAMES)
 	icon?: IconName
+
+	@ApiPropertyOptional({
+		name: "icon-path",
+		description:
+			"Your own icon: one SVG path (the d attribute) on a 24x24 grid, up to 500 characters, commands M L H V C S Q T A Z only. The color comes from the theme. Cannot be combined with icon.",
+		maxLength: ICON_PATH_MAX_LENGTH,
+		example: "M12 2L2 22h20z"
+	})
+	@Expose({ name: "icon-path" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(ICON_PATH_MAX_LENGTH)
+	@IsIconPath()
+	iconPath?: string
 
 	@ApiPropertyOptional({
 		description: "Color theme. auto follows the reader's system theme.",

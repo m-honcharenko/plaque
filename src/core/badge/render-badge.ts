@@ -1,3 +1,4 @@
+import { CUSTOM_ICON_SIZE } from "../icons/custom-icon.js"
 import { getIcon, iconPath } from "../icons/icons.js"
 import type { BadgeConfig } from "./badge-config.js"
 import type { Layout } from "./badge-options.js"
@@ -39,6 +40,11 @@ function n(value: number): string {
 }
 
 function renderIcon(placement: IconPlacement, className: string): string {
+	if (placement.d !== undefined) {
+		// A nested <svg> clips to its box, so a custom path cannot draw over
+		// the text next to it. `d` was checked to hold path commands only.
+		return `<svg x="${n(placement.x)}" y="${n(placement.y)}" width="${placement.size}" height="${placement.size}" viewBox="0 0 ${CUSTOM_ICON_SIZE} ${CUSTOM_ICON_SIZE}"><path class="${className}" d="${placement.d}"/></svg>`
+	}
 	const icon = getIcon(placement.name)
 	if (icon === undefined) {
 		throw new RangeError(`Unknown icon: ${placement.name}`)

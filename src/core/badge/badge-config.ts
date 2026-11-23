@@ -1,3 +1,4 @@
+import { parseIconPath } from "../icons/custom-icon.js"
 import {
 	COLOR_TOKENS,
 	HEX_COLOR,
@@ -16,6 +17,8 @@ export type BadgeConfig = {
 	value: string
 	color: BadgeColor
 	icon: string | null
+	// A custom icon as canonical path data; never set together with `icon`.
+	iconPath: string | null
 	theme: Theme
 	layout: Layout
 }
@@ -26,6 +29,7 @@ export type BadgeInput = {
 	value: string
 	color?: string
 	icon?: string
+	iconPath?: string
 	theme?: Theme
 	layout?: Layout
 }
@@ -68,12 +72,24 @@ export function normalizeText(text: string): string {
 	return text.replace(/\s+/g, " ").trim()
 }
 
+export function normalizeIconPath(raw: string | undefined): string | null {
+	if (raw === undefined || raw.trim() === "") return null
+	const path = parseIconPath(raw)
+	if (path === null) throw new RangeError("Invalid icon path")
+	return path
+}
+
 export function normalizeConfig(input: BadgeInput): BadgeConfig {
+	const iconPath = normalizeIconPath(input.iconPath)
+	if (iconPath !== null && input.icon) {
+		throw new RangeError("icon and icon-path cannot be used together")
+	}
 	return {
 		label: normalizeText(input.label ?? ""),
 		value: normalizeText(input.value),
 		color: normalizeColor(input.color),
 		icon: input.icon ? input.icon : null,
+		iconPath,
 		theme: input.theme ?? DEFAULTS.theme,
 		layout: input.layout ?? DEFAULTS.layout
 	}
@@ -91,6 +107,7 @@ export function configKey(config: BadgeConfig): string {
 		config.value,
 		color,
 		config.icon,
+		config.iconPath,
 		config.theme,
 		config.layout
 	])

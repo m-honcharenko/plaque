@@ -1,3 +1,4 @@
+import { CUSTOM_ICON_NAME } from "../icons/custom-icon.js"
 import { measure, type FontWeight } from "../text/measure.js"
 import { truncateToWidth } from "../text/truncate.js"
 import type { BadgeConfig } from "./badge-config.js"
@@ -29,6 +30,8 @@ export type Box = { x: number; y: number; width: number; height: number }
 // own viewBox to `size`.
 export type IconPlacement = {
 	name: string
+	// Path data of a custom icon (then `name` is just a label).
+	d?: string
 	x: number
 	y: number
 	size: number
@@ -70,13 +73,23 @@ function baseline(top: number, height: number, size: number): number {
 	return top + Math.round((height / 2 + size * 0.36) * 2) / 2
 }
 
+type IconRef = { name: string; d?: string }
+
+// The icon the badge was asked for: a custom path or a whitelisted name.
+function iconRefOf(config: BadgeConfig): IconRef | null {
+	if (config.iconPath !== null) {
+		return { name: CUSTOM_ICON_NAME, d: config.iconPath }
+	}
+	return config.icon === null ? null : { name: config.icon }
+}
+
 function iconAt(
-	name: string,
+	icon: IconRef,
 	x: number,
 	top: number,
 	height: number
 ): IconPlacement {
-	return { name, x, y: top + (height - ICON) / 2, size: ICON }
+	return { ...icon, x, y: top + (height - ICON) / 2, size: ICON }
 }
 
 function textAt(
@@ -105,22 +118,22 @@ function labelSection(
 	x: number,
 	showText: boolean
 ): Section | null {
-	const iconName = config.icon
+	const icon = iconRefOf(config)
 	const run =
 		showText && config.label !== ""
 			? fit(config.label, FONT, 400, TEXT_CAP.label)
 			: null
 
 	let width: number
-	let icon: IconPlacement | null = null
+	let placed: IconPlacement | null = null
 	let text: TextPlacement | null = null
 	if (run === null) {
-		if (iconName === null) return null
+		if (icon === null) return null
 		width = PAD_ICON * 2 + ICON
-		icon = iconAt(iconName, x + PAD_ICON, 0, ROW)
-	} else if (iconName !== null) {
+		placed = iconAt(icon, x + PAD_ICON, 0, ROW)
+	} else if (icon !== null) {
 		width = PAD_ICON + ICON + GAP + run.width + PAD_TEXT
-		icon = iconAt(iconName, x + PAD_ICON, 0, ROW)
+		placed = iconAt(icon, x + PAD_ICON, 0, ROW)
 		text = textAt(run, x + PAD_ICON + ICON + GAP, 0, ROW, FONT, 400, "start")
 	} else {
 		width = PAD_TEXT * 2 + run.width
@@ -129,7 +142,7 @@ function labelSection(
 	return {
 		role: "label",
 		box: { x, y: 0, width, height: ROW },
-		icon,
+		icon: placed,
 		text
 	}
 }
@@ -141,7 +154,7 @@ function valueSection(config: BadgeConfig, x: number, full: boolean): Section {
 		return {
 			role: "value",
 			box: { x, y: 0, width: PAD_ICON * 2 + ICON, height: ROW },
-			icon: iconAt(STATUS_ICONS[status], x + PAD_ICON, 0, ROW),
+			icon: iconAt({ name: STATUS_ICONS[status] }, x + PAD_ICON, 0, ROW),
 			text: null
 		}
 	}
@@ -180,28 +193,28 @@ function horizontal(
 
 // vertical: the icon (or the label when there is no icon) above the value.
 function vertical(config: BadgeConfig): BadgeLayout {
-	const iconName = config.icon
+	const icon = iconRefOf(config)
 	const topRun =
-		iconName === null && config.label !== ""
+		icon === null && config.label !== ""
 			? fit(config.label, FONT_SMALL, 400, TEXT_CAP.verticalText)
 			: null
 	const bottomRun = fit(config.value, FONT_SMALL, 600, TEXT_CAP.verticalText)
 
 	let topWidth = 0
-	if (iconName !== null) topWidth = ICON + PAD_ICON * 2
+	if (icon !== null) topWidth = ICON + PAD_ICON * 2
 	else if (topRun !== null) topWidth = topRun.width + PAD_TEXT * 2
 	const width = Math.max(topWidth, bottomRun.width + PAD_TEXT * 2)
 
 	const sections: Section[] = []
 	let y = 0
-	if (iconName !== null || topRun !== null) {
+	if (icon !== null || topRun !== null) {
 		sections.push({
 			role: "label",
 			box: { x: 0, y: 0, width, height: ROW },
 			icon:
-				iconName === null
+				icon === null
 					? null
-					: iconAt(iconName, Math.round((width - ICON) / 2), 0, ROW),
+					: iconAt(icon, Math.round((width - ICON) / 2), 0, ROW),
 			text:
 				topRun === null
 					? null
