@@ -4,7 +4,7 @@ import {
 	type ValidationOptions
 } from "class-validator"
 
-import { isIconPath } from "../../core/icons/custom-icon.js"
+import { isIconPath, parseIconStroke } from "../../core/icons/custom-icon.js"
 
 // A custom icon must be plain path data and cannot come with a named icon.
 export function IsIconPath(options?: ValidationOptions): PropertyDecorator {
@@ -23,6 +23,29 @@ export function IsIconPath(options?: ValidationOptions): PropertyDecorator {
 					if (typeof value !== "string") return false
 					const { icon } = args.object as { icon?: string }
 					return icon === undefined && isIconPath(value)
+				}
+			}
+		})
+	}
+}
+
+// A line width in range, and only together with icon-path.
+export function IsIconStroke(options?: ValidationOptions): PropertyDecorator {
+	return (target, propertyName) => {
+		registerDecorator({
+			name: "isIconStroke",
+			target: target.constructor,
+			propertyName: propertyName as string,
+			options: {
+				message:
+					"icon-stroke must be a number from 0.25 to 6 and needs icon-path",
+				...options
+			},
+			validator: {
+				validate(value: unknown, args: ValidationArguments): boolean {
+					if (typeof value !== "string") return false
+					const { iconPath } = args.object as { iconPath?: string }
+					return iconPath !== undefined && parseIconStroke(value) !== null
 				}
 			}
 		})

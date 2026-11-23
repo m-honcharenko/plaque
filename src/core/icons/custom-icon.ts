@@ -9,6 +9,19 @@ export const ICON_PATH_MAX_LENGTH = 500
 export const ICON_PATH_MAX_NUMBER = 100
 export const CUSTOM_ICON_SIZE = 24
 export const CUSTOM_ICON_NAME = "custom"
+// Line width of an outline icon, in grid units (2 is the common one).
+export const ICON_STROKE_RANGE = { min: 0.25, max: 6 } as const
+
+// "1.5" gives 1.5; null unless it is a plain number (two decimals at most)
+// inside the range.
+export function parseIconStroke(raw: string | number): number | null {
+	const text = String(raw).trim()
+	if (!/^\d+(?:\.\d{1,2})?$/.test(text)) return null
+	const value = Number(text)
+	return value >= ICON_STROKE_RANGE.min && value <= ICON_STROKE_RANGE.max
+		? value
+		: null
+}
 
 // How many numbers each command takes. An arc has two flags (0 or 1) that
 // may be glued to the next number, so it is parsed separately.

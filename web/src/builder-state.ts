@@ -16,7 +16,24 @@ import {
 } from "../../src/core/badge/snippet.js"
 import { isIconName } from "../../src/core/icons/icons.js"
 
-export type ColorMode = "token" | "custom"
+// One side of the badge: left alone ("auto"), a token or a hex color.
+export type ColorMode = "auto" | "token" | "custom"
+
+export type ColorChoice = {
+	mode: ColorMode
+	token: ColorToken
+	// Six hex digits without "#".
+	hex: string
+}
+
+// The value for the API, or undefined to leave the side to the service.
+export function colorParam(choice: ColorChoice): string | undefined {
+	if (choice.mode === "auto") return undefined
+	return choice.mode === "token" ? choice.token : choice.hex
+}
+
+export const ICON_SOURCES = ["library", "custom"] as const
+export type IconSource = (typeof ICON_SOURCES)[number]
 
 export const NARROW_CHOICES = ["auto", "compact", "vertical"] as const
 export type NarrowChoice = (typeof NARROW_CHOICES)[number]
@@ -30,11 +47,21 @@ export function forcedNarrow(choice: NarrowChoice): NarrowLayout | undefined {
 export type BuilderState = {
 	label: string
 	value: string
-	colorMode: ColorMode
-	token: ColorToken
-	// Six hex digits without "#".
-	hex: string
+	// Right (or bottom) side. Auto: success, or a shade of the label color.
+	valueColor: ColorChoice
+	// Left (or top) side. Auto: the surface of the theme.
+	labelColor: ColorChoice
+	// Ink overrides as six hex digits; null picks a readable one.
+	textColor: string | null
+	iconColor: string | null
+	// Where the icon comes from: the whitelist or the user's own path.
+	iconSource: IconSource
 	icon: string | null
+	// Canonical path data of the custom icon, already checked by
+	// extractIconPath.
+	customPath: string | null
+	// Line width when the custom icon is an outline, null when it is filled.
+	customStroke: number | null
 	theme: Theme
 	// "auto" lets the value decide: a status is compact, data is vertical.
 	narrow: NarrowChoice
@@ -47,6 +74,7 @@ export type Field =
 	| "label"
 	| "value"
 	| "color"
+	| "labelColor"
 	| "icon"
 	| "breakpoint"
 	| "origin"
@@ -67,10 +95,14 @@ export function defaultState(origin: string): BuilderState {
 	return {
 		label: "build",
 		value: "passing",
-		colorMode: "token",
-		token: "success",
-		hex: "1a7f37",
+		valueColor: { mode: "auto", token: "success", hex: "1a7f37" },
+		labelColor: { mode: "auto", token: "info", hex: "3b73d1" },
+		textColor: null,
+		iconColor: null,
+		iconSource: "library",
 		icon: "workflow",
+		customPath: null,
+		customStroke: null,
 		theme: "auto",
 		narrow: "auto",
 		breakpoint: DEFAULT_BREAKPOINT,
@@ -102,10 +134,23 @@ export function validate(state: BuilderState): Validation {
 	} else if (state.value.length > LIMITS.value) {
 		errors.value = `Up to ${LIMITS.value} characters`
 	}
-	if (state.colorMode === "custom" && !HEX_COLOR.test(state.hex)) {
+	if (
+		state.valueColor.mode === "custom" &&
+		!HEX_COLOR.test(state.valueColor.hex)
+	) {
 		errors.color = "Six hex digits, for example 1a7f37"
 	}
-	if (state.icon !== null && !isIconName(state.icon)) {
+	if (
+		state.labelColor.mode === "custom" &&
+		!HEX_COLOR.test(state.labelColor.hex)
+	) {
+		errors.labelColor = "Six hex digits, for example 3b73d1"
+	}
+	if (
+		state.iconSource === "library" &&
+		state.icon !== null &&
+		!isIconName(state.icon)
+	) {
 		errors.icon = "Unknown icon"
 	}
 	if (
@@ -121,13 +166,27 @@ export function validate(state: BuilderState): Validation {
 	if (origin === null || Object.keys(errors).length > 0) {
 		return { ok: false, errors }
 	}
-	const config = normalizeConfig({
-		label: state.label,
-		value: state.value,
-		color: state.colorMode === "token" ? state.token : state.hex,
-		icon: state.icon ?? undefined,
-		theme: state.theme
-	})
+	const custom = state.iconSource === "custom"
+	let config: BadgeConfig
+	try {
+		config = normalizeConfig({
+			label: state.label,
+			value: state.value,
+			color: colorParam(state.valueColor),
+			labelColor: colorParam(state.labelColor),
+			textColor: state.textColor ?? undefined,
+			iconColor: state.iconColor ?? undefined,
+			icon: custom ? undefined : (state.icon ?? undefined),
+			iconPath: custom ? (state.customPath ?? undefined) : undefined,
+			iconStroke:
+				custom && state.customPath !== null
+					? (state.customStroke ?? undefined)
+					: undefined,
+			theme: state.theme
+		})
+	} catch {
+		return { ok: false, errors: { icon: "This icon is not accepted" } }
+	}
 	return {
 		ok: true,
 		config,

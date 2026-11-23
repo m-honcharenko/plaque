@@ -3,14 +3,17 @@ import { useState } from "preact/hooks"
 import { LIMITS, THEMES } from "../../src/core/badge/badge-options.js"
 import { BREAKPOINT_RANGE } from "../../src/core/badge/snippet.js"
 import {
+	ICON_SOURCES,
 	NARROW_CHOICES,
 	defaultState,
 	validate,
 	type BuilderState
 } from "./builder-state.js"
 import { ColorPicker } from "./components/color-picker.js"
+import { CustomIcon } from "./components/custom-icon.js"
 import { Field } from "./components/field.js"
 import { IconPicker } from "./components/icon-picker.js"
+import { InkPicker } from "./components/ink-picker.js"
 import { Preview } from "./components/preview.js"
 import { Segmented } from "./components/segmented.js"
 import { SnippetOutput } from "./components/snippet-output.js"
@@ -107,15 +110,66 @@ export function App() {
 					</div>
 
 					<ColorPicker
-						state={state}
-						error={errors.color}
-						onChange={patch}
+						legend="Left side color"
+						autoHint="Auto: the surface of the page theme."
+						value={state.labelColor}
+						error={errors.labelColor}
+						onChange={(labelColor) => patch({ labelColor })}
 					/>
 
-					<IconPicker
-						value={state.icon}
-						onChange={(icon) => patch({ icon })}
+					<ColorPicker
+						legend="Right side color"
+						autoHint="Auto: green, or a darker shade of the left color."
+						value={state.valueColor}
+						error={errors.color}
+						onChange={(valueColor) => patch({ valueColor })}
 					/>
+
+					<div class="grid gap-6 sm:grid-cols-2">
+						<InkPicker
+							legend="Text color"
+							value={state.textColor}
+							onChange={(textColor) => patch({ textColor })}
+						/>
+						<InkPicker
+							legend="Icon color"
+							value={state.iconColor}
+							onChange={(iconColor) => patch({ iconColor })}
+						/>
+					</div>
+
+					<div>
+						<Segmented
+							legend="Icon"
+							options={ICON_SOURCES}
+							value={state.iconSource}
+							onChange={(iconSource) => patch({ iconSource })}
+						/>
+						<div class="mt-3">
+							{state.iconSource === "library" ? (
+								<IconPicker
+									value={state.icon}
+									onChange={(icon) => patch({ icon })}
+								/>
+							) : (
+								<CustomIcon
+									path={state.customPath}
+									stroke={state.customStroke}
+									onChange={(customPath, customStroke) =>
+										patch({ customPath, customStroke })
+									}
+								/>
+							)}
+						</div>
+						{errors.icon === undefined ? null : (
+							<p
+								class="mt-1 text-sm text-red-600 dark:text-red-400"
+								role="alert"
+							>
+								{errors.icon}
+							</p>
+						)}
+					</div>
 
 					<Segmented
 						legend="Theme"

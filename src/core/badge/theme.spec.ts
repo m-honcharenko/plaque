@@ -65,3 +65,14 @@ describe("core/badge/theme", () => {
 		}
 	})
 })
+
+describe("label color variable", () => {
+	it("adds --l only when the label has its own color", () => {
+		expect(themeVariables("light", CUSTOM)).not.toContain("--l:")
+		const label = { type: "hex", value: "3b73d1" } as const
+		expect(themeVariables("light", CUSTOM, label)).toContain("--l:#3b73d1")
+		expect(
+			themeVariables("auto", CUSTOM, { type: "token", name: "info" })
+		).toContain("--l:#388bfd")
+	})
+})
