@@ -84,14 +84,15 @@ or the Swagger UI at <http://localhost:3000/docs>.
 
 Returns an SVG. `value` is required, everything else is optional.
 
-| Param    | Meaning                                                 | Limits                         |
-| -------- | ------------------------------------------------------- | ------------------------------ |
-| `label`  | Left text. Shown in `full` only.                        | up to 24 chars, may be empty   |
-| `value`  | Right text: a status or data.                           | 1 to 24 chars, not blank       |
-| `color`  | `success`, `warning`, `error`, `info`, `neutral` or hex | six hex digits **without** `#` |
-| `icon`   | Icon name from the whitelist below                      | unknown name is a 400          |
-| `theme`  | `auto` (follows the system theme), `light`, `dark`      | default `auto`                 |
-| `layout` | `full`, `compact`, `vertical`                           | default `full`                 |
+| Param       | Meaning                                                 | Limits                           |
+| ----------- | ------------------------------------------------------- | -------------------------------- |
+| `label`     | Left text. Shown in `full` only.                        | up to 24 chars, may be empty     |
+| `value`     | Right text: a status or data.                           | 1 to 24 chars, not blank         |
+| `color`     | `success`, `warning`, `error`, `info`, `neutral` or hex | six hex digits **without** `#`   |
+| `icon`      | Icon name from the whitelist below                      | unknown name is a 400            |
+| `icon-path` | Your own icon: one SVG path, see below                  | up to 500 chars, not with `icon` |
+| `theme`     | `auto` (follows the system theme), `light`, `dark`      | default `auto`                   |
+| `layout`    | `full`, `compact`, `vertical`                           | default `full`                   |
 
 Hex has no `#` because `#` starts a URL fragment.
 
@@ -103,6 +104,13 @@ Icons (38): `alert` `apple` `bitbucket` `bug` `bun` `check` `check-circle`
 
 Icon paths are copied into the repository and embedded in the SVG, so a badge
 makes no external requests.
+
+Your own icon: `icon-path` takes the `d` attribute of a single SVG `<path>`
+drawn on a 24x24 grid, for example `M12 2L2 22h20z`. Only the commands
+`M L H V C S Q T A Z` (either case) and numbers up to 100 are accepted, up to
+500 characters. The color comes from the theme. Anything else is a 400, and a
+whole SVG file is never accepted: a badge URL can be opened directly, so
+markup in it would run on this origin.
 
 ### `GET /snippet`
 

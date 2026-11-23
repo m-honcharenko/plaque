@@ -14,6 +14,7 @@ describe("normalizeConfig", () => {
 			value: "ok",
 			color: { type: "token", name: "success" },
 			icon: null,
+			iconPath: null,
 			theme: "auto",
 			layout: "full"
 		})
@@ -100,5 +101,38 @@ describe("configKey", () => {
 				base
 			)
 		}
+	})
+})
+
+describe("custom icon path", () => {
+	it("keeps a valid path in canonical form", () => {
+		const config = normalizeConfig({
+			value: "ok",
+			iconPath: "M12,2 L2 22h20  z"
+		})
+		expect(config.iconPath).toBe("M12 2L2 22h20z")
+		expect(config.icon).toBeNull()
+	})
+
+	it("treats an empty path as none", () => {
+		expect(normalizeConfig({ value: "ok", iconPath: "  " }).iconPath).toBeNull()
+	})
+
+	it("rejects a path that is not drawing data", () => {
+		expect(() =>
+			normalizeConfig({ value: "ok", iconPath: "<script>" })
+		).toThrow(RangeError)
+	})
+
+	it("rejects a path together with a named icon", () => {
+		expect(() =>
+			normalizeConfig({ value: "ok", icon: "check", iconPath: "M0 0z" })
+		).toThrow(RangeError)
+	})
+
+	it("gives different paths different cache keys", () => {
+		const a = normalizeConfig({ value: "ok", iconPath: "M0 0L1 1z" })
+		const b = normalizeConfig({ value: "ok", iconPath: "M0 0L2 2z" })
+		expect(configKey(a)).not.toBe(configKey(b))
 	})
 })

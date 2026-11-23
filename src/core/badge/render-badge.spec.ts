@@ -182,3 +182,35 @@ describe("core/badge injection", () => {
 		expect(escapeXml("a\tb\nc ✓ é 日本")).toBe("a\tb\nc ✓ é 日本")
 	})
 })
+
+describe("custom icon", () => {
+	const config = (extra: Partial<BadgeInput> = {}) =>
+		normalizeConfig({
+			label: "build",
+			value: "passing",
+			iconPath: "M12 2L2 22h20z",
+			...extra
+		})
+
+	it("draws the path in a clipped 24x24 box", () => {
+		const svg = renderBadge(config())
+		expect(svg).toContain('viewBox="0 0 24 24"')
+		expect(svg).toContain('d="M12 2L2 22h20z"')
+		expect(svg).toContain('width="16" height="16"')
+	})
+
+	it("works in every layout", () => {
+		for (const variant of ["full", "compact", "vertical"] as const) {
+			expect(renderBadge(config(), variant)).toContain('d="M12 2L2 22h20z"')
+		}
+	})
+
+	it("sizes the badge like a named icon", () => {
+		const named = renderBadge(
+			normalizeConfig({ label: "build", value: "passing", icon: "check" })
+		)
+		const custom = renderBadge(config())
+		const width = (svg: string) => svg.match(/width="([\d.]+)"/)?.[1]
+		expect(width(custom)).toBe(width(named))
+	})
+})

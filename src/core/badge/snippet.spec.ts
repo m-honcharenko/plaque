@@ -51,6 +51,15 @@ describe("renderSnippet", () => {
 		expect(new URL(data.narrow).searchParams.get("layout")).toBe("compact")
 	})
 
+	it("puts a custom icon path into both URLs", () => {
+		const { narrow, full } = urls(
+			snippetOf({ value: "v1", iconPath: "M12 2L2 22h20z" })
+		)
+		for (const url of [narrow, full]) {
+			expect(new URL(url).searchParams.get("icon-path")).toBe("M12 2L2 22h20z")
+		}
+	})
+
 	it("puts the breakpoint into the media query", () => {
 		const snippet = snippetOf({ value: "ok" }, { ...OPTIONS, breakpoint: 480 })
 		expect(snippet).toContain('media="(max-width: 480px)"')

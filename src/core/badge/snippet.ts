@@ -36,6 +36,7 @@ export function badgeUrl(
 		config.color.type === "token" ? config.color.name : config.color.value
 	)
 	if (config.icon !== null) params.set("icon", config.icon)
+	if (config.iconPath !== null) params.set("icon-path", config.iconPath)
 	params.set("theme", config.theme)
 	params.set("layout", layout)
 	return `${origin}/badge?${params}`
