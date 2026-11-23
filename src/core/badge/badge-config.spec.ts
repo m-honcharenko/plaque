@@ -13,8 +13,12 @@ describe("normalizeConfig", () => {
 			label: "",
 			value: "ok",
 			color: { type: "token", name: "success" },
+			labelColor: null,
+			textColor: null,
+			iconColor: null,
 			icon: null,
 			iconPath: null,
+			iconStroke: null,
 			theme: "auto",
 			layout: "full"
 		})
@@ -134,5 +138,112 @@ describe("custom icon path", () => {
 		const a = normalizeConfig({ value: "ok", iconPath: "M0 0L1 1z" })
 		const b = normalizeConfig({ value: "ok", iconPath: "M0 0L2 2z" })
 		expect(configKey(a)).not.toBe(configKey(b))
+	})
+})
+
+describe("custom icon stroke", () => {
+	it("keeps a line width next to a path", () => {
+		const config = normalizeConfig({
+			value: "ok",
+			iconPath: "M0 0L1 1",
+			iconStroke: "1.5"
+		})
+		expect(config.iconStroke).toBe(1.5)
+		expect(
+			normalizeConfig({ value: "ok", iconPath: "M0 0L1 1" }).iconStroke
+		).toBeNull()
+	})
+
+	it("accepts a number as well as text", () => {
+		const config = normalizeConfig({
+			value: "ok",
+			iconPath: "M0 0L1 1",
+			iconStroke: 2
+		})
+		expect(config.iconStroke).toBe(2)
+	})
+
+	it("rejects a width out of range, and a width without a path", () => {
+		expect(() =>
+			normalizeConfig({ value: "ok", iconPath: "M0 0L1 1", iconStroke: "9" })
+		).toThrow(RangeError)
+		expect(() => normalizeConfig({ value: "ok", iconStroke: "2" })).toThrow(
+			RangeError
+		)
+	})
+
+	it("tells a filled and an outlined icon apart in the cache key", () => {
+		const filled = normalizeConfig({ value: "ok", iconPath: "M0 0L1 1" })
+		const line = normalizeConfig({
+			value: "ok",
+			iconPath: "M0 0L1 1",
+			iconStroke: "2"
+		})
+		expect(configKey(filled)).not.toBe(configKey(line))
+	})
+})
+
+describe("label color and inks", () => {
+	it("takes a token or a hex color for the label side", () => {
+		expect(
+			normalizeConfig({ value: "ok", labelColor: "info" }).labelColor
+		).toEqual({ type: "token", name: "info" })
+		expect(
+			normalizeConfig({ value: "ok", labelColor: "3B73D1" }).labelColor
+		).toEqual({ type: "hex", value: "3b73d1" })
+	})
+
+	it("derives a darker value color from the label color", () => {
+		const config = normalizeConfig({ value: "ok", labelColor: "3b73d1" })
+		expect(config.color).toEqual({ type: "hex", value: "2c569d" })
+	})
+
+	it("lightens the value side next to a nearly black label", () => {
+		const config = normalizeConfig({ value: "ok", labelColor: "000000" })
+		expect(config.color).toEqual({ type: "hex", value: "333333" })
+	})
+
+	it("keeps an explicit value color", () => {
+		const config = normalizeConfig({
+			value: "ok",
+			labelColor: "3b73d1",
+			color: "error"
+		})
+		expect(config.color).toEqual({ type: "token", name: "error" })
+	})
+
+	it("keeps the usual value color when there is no label color", () => {
+		expect(normalizeConfig({ value: "ok" }).color).toEqual({
+			type: "token",
+			name: "success"
+		})
+	})
+
+	it("takes hex ink colors in lowercase, and nothing else", () => {
+		const config = normalizeConfig({
+			value: "ok",
+			textColor: "FFAA00",
+			iconColor: ""
+		})
+		expect(config.textColor).toBe("ffaa00")
+		expect(config.iconColor).toBeNull()
+		for (const bad of ["success", "#fff", "12345", "zzzzzz"]) {
+			expect(() => normalizeConfig({ value: "ok", textColor: bad })).toThrow(
+				RangeError
+			)
+		}
+		expect(() => normalizeConfig({ value: "ok", labelColor: "nope" })).toThrow(
+			RangeError
+		)
+	})
+
+	it("gives different colors different cache keys", () => {
+		const keys = [
+			{},
+			{ labelColor: "3b73d1" },
+			{ textColor: "ffffff" },
+			{ iconColor: "ffffff" }
+		].map((extra) => configKey(normalizeConfig({ value: "ok", ...extra })))
+		expect(new Set(keys).size).toBe(4)
 	})
 })

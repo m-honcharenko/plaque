@@ -205,6 +205,20 @@ describe("custom icon", () => {
 		}
 	})
 
+	it("draws an outline with a round line of the given width", () => {
+		const svg = renderBadge(config({ iconStroke: "1.5" }))
+		expect(svg).toContain('class="fg-line" stroke-width="1.5"')
+		expect(svg).toContain(".fg-line{stroke:var(--fg)}")
+		expect(svg).not.toContain('<path class="fg" d=')
+	})
+
+	it("keeps the outline in the narrow layouts", () => {
+		for (const variant of ["compact", "vertical"] as const) {
+			const svg = renderBadge(config({ iconStroke: "2" }), variant)
+			expect(svg).toContain('class="fg-line" stroke-width="2"')
+		}
+	})
+
 	it("sizes the badge like a named icon", () => {
 		const named = renderBadge(
 			normalizeConfig({ label: "build", value: "passing", icon: "check" })
@@ -212,5 +226,77 @@ describe("custom icon", () => {
 		const custom = renderBadge(config())
 		const width = (svg: string) => svg.match(/width="([\d.]+)"/)?.[1]
 		expect(width(custom)).toBe(width(named))
+	})
+})
+
+describe("own colors", () => {
+	const build = (extra: Partial<BadgeInput> = {}) =>
+		renderBadge(
+			normalizeConfig({
+				label: "build",
+				value: "passing",
+				icon: "workflow",
+				...extra
+			})
+		)
+
+	it("changes nothing without own colors", () => {
+		const svg = build()
+		expect(svg).toContain('class="chip"')
+		expect(svg).toContain('<text class="fg"')
+		expect(svg).not.toContain("--l:")
+		expect(svg).not.toContain('fill="#')
+	})
+
+	it("paints the label side with its own color", () => {
+		const svg = build({ labelColor: "3b73d1" })
+		expect(svg).toContain("--l:#3b73d1")
+		expect(svg).toContain('class="lab"')
+		expect(svg).not.toContain('class="chip"')
+	})
+
+	it("picks a readable ink for the label color", () => {
+		expect(build({ labelColor: "3b73d1" })).toContain('<text fill="#ffffff"')
+		expect(build({ labelColor: "ffd33d" })).toContain('<text fill="#1f2328"')
+	})
+
+	it("keeps white on a light hex value color only when it reads", () => {
+		expect(build({ color: "1a7f37" })).toContain('<text class="on"')
+		expect(build({ color: "ffd33d" })).toContain('fill="#1f2328"')
+	})
+
+	it("lets the text and icon colors be set apart", () => {
+		const svg = build({ textColor: "ff0000", iconColor: "00ff00" })
+		expect(svg).toContain('<text fill="#ff0000"')
+		expect(svg).toContain('<path fill="#00ff00"')
+	})
+
+	it("gives the icon the text color unless it has its own", () => {
+		const svg = build({ textColor: "ff0000" })
+		expect(svg).toContain('<path fill="#ff0000"')
+	})
+
+	it("colors the status icon of the narrow layout", () => {
+		const svg = renderBadge(
+			normalizeConfig({ value: "passing", iconColor: "00ff00" }),
+			"compact"
+		)
+		expect(svg).toContain('<path fill="#00ff00"')
+	})
+
+	it("colors a custom icon, filled or outlined", () => {
+		const filled = build({
+			icon: undefined,
+			iconPath: "M0 0L5 5z",
+			iconColor: "00ff00"
+		})
+		expect(filled).toContain('<path fill="#00ff00" d="M0 0L5 5z"')
+		const outline = build({
+			icon: undefined,
+			iconPath: "M0 0L5 5",
+			iconStroke: "2",
+			iconColor: "00ff00"
+		})
+		expect(outline).toContain('class="line" stroke="#00ff00" stroke-width="2"')
 	})
 })

@@ -34,8 +34,8 @@ function cellState(active: boolean): string {
 export function IconPicker({ value, onChange }: IconPickerProps) {
 	return (
 		<fieldset>
-			<div class="flex items-baseline justify-between gap-2">
-				<legend class="block text-sm font-medium">Icon</legend>
+			<div class="flex items-baseline justify-end gap-2">
+				<legend class="sr-only">Library icon</legend>
 				<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
 					{value ?? "none"}
 				</span>

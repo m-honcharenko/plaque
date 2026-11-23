@@ -24,18 +24,27 @@ function valueColor(color: BadgeColor, scheme: Scheme): string {
 	return DARK_PALETTE[color.name]
 }
 
-function variables(scheme: Scheme, color: BadgeColor): string {
+function variables(
+	scheme: Scheme,
+	color: BadgeColor,
+	label: BadgeColor | null
+): string {
 	const { fg, chip } = SURFACE[scheme]
-	return `:root{--fg:${fg};--chip:${chip};--v:#${valueColor(color, scheme)}}`
+	const own = label === null ? "" : `;--l:#${valueColor(label, scheme)}`
+	return `:root{--fg:${fg};--chip:${chip};--v:#${valueColor(color, scheme)}${own}}`
 }
 
 // The CSS variables of a badge. auto starts light and switches with the
 // reader's system theme; light and dark fix the theme and have no @media.
-export function themeVariables(theme: Theme, color: BadgeColor): string {
-	if (theme === "light") return variables("light", color)
-	if (theme === "dark") return variables("dark", color)
+export function themeVariables(
+	theme: Theme,
+	color: BadgeColor,
+	label: BadgeColor | null = null
+): string {
+	if (theme === "light") return variables("light", color, label)
+	if (theme === "dark") return variables("dark", color, label)
 	return (
-		variables("light", color) +
-		`@media (prefers-color-scheme:dark){${variables("dark", color)}}`
+		variables("light", color, label) +
+		`@media (prefers-color-scheme:dark){${variables("dark", color, label)}}`
 	)
 }

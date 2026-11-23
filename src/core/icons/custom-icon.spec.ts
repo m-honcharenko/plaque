@@ -3,7 +3,8 @@ import { describe, expect, it } from "bun:test"
 import {
 	ICON_PATH_MAX_LENGTH,
 	isIconPath,
-	parseIconPath
+	parseIconPath,
+	parseIconStroke
 } from "./custom-icon.js"
 
 describe("parseIconPath", () => {
@@ -68,4 +69,24 @@ describe("parseIconPath", () => {
 		const out = parseIconPath("M 1,2\n\t3 4 l5 6")
 		expect(out).toMatch(/^[MmLlHhVvCcSsQqTtAaZz0-9.+\- ]+$/)
 	})
+})
+
+describe("parseIconStroke", () => {
+	it.each([
+		["2", 2],
+		["1.5", 1.5],
+		["0.25", 0.25],
+		["6", 6],
+		[2, 2],
+		[" 1.75 ", 1.75]
+	])("accepts %p", (raw, value) => {
+		expect(parseIconStroke(raw)).toBe(value)
+	})
+
+	it.each(["", "0", "0.1", "6.5", "-1", "1.234", "1e1", "abc", ".5", "2px"])(
+		"refuses %p",
+		(raw) => {
+			expect(parseIconStroke(raw)).toBeNull()
+		}
+	)
 })

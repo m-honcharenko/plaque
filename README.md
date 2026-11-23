@@ -84,17 +84,25 @@ or the Swagger UI at <http://localhost:3000/docs>.
 
 Returns an SVG. `value` is required, everything else is optional.
 
-| Param       | Meaning                                                 | Limits                           |
-| ----------- | ------------------------------------------------------- | -------------------------------- |
-| `label`     | Left text. Shown in `full` only.                        | up to 24 chars, may be empty     |
-| `value`     | Right text: a status or data.                           | 1 to 24 chars, not blank         |
-| `color`     | `success`, `warning`, `error`, `info`, `neutral` or hex | six hex digits **without** `#`   |
-| `icon`      | Icon name from the whitelist below                      | unknown name is a 400            |
-| `icon-path` | Your own icon: one SVG path, see below                  | up to 500 chars, not with `icon` |
-| `theme`     | `auto` (follows the system theme), `light`, `dark`      | default `auto`                   |
-| `layout`    | `full`, `compact`, `vertical`                           | default `full`                   |
+| Param         | Meaning                                                 | Limits                           |
+| ------------- | ------------------------------------------------------- | -------------------------------- |
+| `label`       | Left text. Shown in `full` only.                        | up to 24 chars, may be empty     |
+| `value`       | Right text: a status or data.                           | 1 to 24 chars, not blank         |
+| `color`       | `success`, `warning`, `error`, `info`, `neutral` or hex | six hex digits **without** `#`   |
+| `label-color` | Left (top) side: token or hex                           | default: theme surface           |
+| `text-color`  | Text color, hex                                         | default: picked for contrast     |
+| `icon-color`  | Icon color, hex                                         | default: the text color          |
+| `icon`        | Icon name from the whitelist below                      | unknown name is a 400            |
+| `icon-path`   | Your own icon: one SVG path, see below                  | up to 500 chars, not with `icon` |
+| `icon-stroke` | Draw `icon-path` as an outline of this width            | 0.25 to 6, needs `icon-path`     |
+| `theme`       | `auto` (follows the system theme), `light`, `dark`      | default `auto`                   |
+| `layout`      | `full`, `compact`, `vertical`                           | default `full`                   |
 
 Hex has no `#` because `#` starts a URL fragment.
+
+Without `label-color` the left side follows the theme. With it and without
+`color`, the right side becomes a darker shade of the left one; pass `color`
+to choose both sides yourself.
 
 Icons (38): `alert` `apple` `bitbucket` `bug` `bun` `check` `check-circle`
 `clock` `code` `codeberg` `docker` `download` `eye` `git-branch`
@@ -111,6 +119,11 @@ drawn on a 24x24 grid, for example `M12 2L2 22h20z`. Only the commands
 500 characters. The color comes from the theme. Anything else is a 400, and a
 whole SVG file is never accepted: a badge URL can be opened directly, so
 markup in it would run on this origin.
+
+Outline icons: add `icon-stroke` (a line width on the same grid, usually `2`)
+and the path is drawn as a round line instead of being filled. Several shapes
+can share one path as sub-paths (`M...z M...`), but one badge icon is either
+filled or outlined, never both.
 
 ### `GET /snippet`
 

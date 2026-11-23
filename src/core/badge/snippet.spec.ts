@@ -60,6 +60,33 @@ describe("renderSnippet", () => {
 		}
 	})
 
+	it("puts the line width of an outline icon into both URLs", () => {
+		const { narrow, full } = urls(
+			snippetOf({ value: "v1", iconPath: "M0 0L5 5", iconStroke: "1.5" })
+		)
+		for (const url of [narrow, full]) {
+			expect(new URL(url).searchParams.get("icon-stroke")).toBe("1.5")
+		}
+	})
+
+	it("puts the colors into both URLs", () => {
+		const { narrow, full } = urls(
+			snippetOf({
+				value: "v1",
+				labelColor: "3b73d1",
+				textColor: "ffffff",
+				iconColor: "ffaa00"
+			})
+		)
+		for (const url of [narrow, full]) {
+			const params = new URL(url).searchParams
+			expect(params.get("label-color")).toBe("3b73d1")
+			expect(params.get("color")).toBe("2c569d")
+			expect(params.get("text-color")).toBe("ffffff")
+			expect(params.get("icon-color")).toBe("ffaa00")
+		}
+	})
+
 	it("puts the breakpoint into the media query", () => {
 		const snippet = snippetOf({ value: "ok" }, { ...OPTIONS, breakpoint: 480 })
 		expect(snippet).toContain('media="(max-width: 480px)"')

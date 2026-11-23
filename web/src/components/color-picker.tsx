@@ -4,13 +4,16 @@ import {
 	HEX_COLOR,
 	type ColorToken
 } from "../../../src/core/badge/badge-options.js"
-import type { BuilderState } from "../builder-state.js"
+import type { ColorChoice } from "../builder-state.js"
 import { errorText, input, inputError } from "../ui.js"
 
 type ColorPickerProps = {
-	state: BuilderState
+	legend: string
+	// What "Auto" does for this side, shown under the swatches.
+	autoHint: string
+	value: ColorChoice
 	error?: string
-	onChange: (patch: Partial<BuilderState>) => void
+	onChange: (value: ColorChoice) => void
 }
 
 const swatch =
@@ -23,20 +26,35 @@ function swatchState(active: boolean): string {
 		: "border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
 }
 
-// Five tokens plus a custom hex color.
-export function ColorPicker({ state, error, onChange }: ColorPickerProps) {
-	const custom = state.colorMode === "custom"
+// Auto, five tokens and a custom hex color.
+export function ColorPicker({
+	legend,
+	autoHint,
+	value,
+	error,
+	onChange
+}: ColorPickerProps) {
+	const custom = value.mode === "custom"
+	const auto = value.mode === "auto"
 	return (
 		<fieldset>
-			<legend class="block text-sm font-medium">Color</legend>
+			<legend class="block text-sm font-medium">{legend}</legend>
 			<div class="mt-1 flex flex-wrap gap-2">
+				<button
+					type="button"
+					aria-pressed={auto}
+					onClick={() => onChange({ ...value, mode: "auto" })}
+					class={`${swatch} ${swatchState(auto)}`}
+				>
+					Auto
+				</button>
 				{COLOR_TOKENS.map((token: ColorToken) => (
 					<button
 						key={token}
 						type="button"
-						aria-pressed={!custom && state.token === token}
-						onClick={() => onChange({ colorMode: "token", token })}
-						class={`${swatch} ${swatchState(!custom && state.token === token)}`}
+						aria-pressed={value.mode === "token" && value.token === token}
+						onClick={() => onChange({ ...value, mode: "token", token })}
+						class={`${swatch} ${swatchState(value.mode === "token" && value.token === token)}`}
 					>
 						<span
 							class="size-4 rounded-full"
@@ -48,28 +66,34 @@ export function ColorPicker({ state, error, onChange }: ColorPickerProps) {
 				<button
 					type="button"
 					aria-pressed={custom}
-					onClick={() => onChange({ colorMode: "custom" })}
+					onClick={() => onChange({ ...value, mode: "custom" })}
 					class={`${swatch} ${swatchState(custom)}`}
 				>
 					<span
 						class="size-4 rounded-full border border-neutral-300"
 						style={{
-							backgroundColor: HEX_COLOR.test(state.hex)
-								? `#${state.hex}`
+							backgroundColor: HEX_COLOR.test(value.hex)
+								? `#${value.hex}`
 								: "#ffffff"
 						}}
 					/>
 					Custom
 				</button>
 			</div>
+			{auto ? (
+				<p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+					{autoHint}
+				</p>
+			) : null}
 			{custom ? (
 				<div class="mt-3 flex items-center gap-2">
 					<input
 						type="color"
-						aria-label="Pick a color"
-						value={HEX_COLOR.test(state.hex) ? `#${state.hex}` : "#000000"}
+						aria-label={`${legend}: pick a color`}
+						value={HEX_COLOR.test(value.hex) ? `#${value.hex}` : "#000000"}
 						onInput={(event) =>
 							onChange({
+								...value,
 								hex: event.currentTarget.value.slice(1).toLowerCase()
 							})
 						}
@@ -79,14 +103,15 @@ export function ColorPicker({ state, error, onChange }: ColorPickerProps) {
 						<span class="text-neutral-500">#</span>
 						<input
 							type="text"
-							aria-label="Hex color"
+							aria-label={`${legend}: hex`}
 							aria-invalid={error !== undefined}
-							value={state.hex}
+							value={value.hex}
 							maxLength={6}
 							spellcheck={false}
 							autocomplete="off"
 							onInput={(event) =>
 								onChange({
+									...value,
 									hex: event.currentTarget.value.replace(/^#/, "").toLowerCase()
 								})
 							}

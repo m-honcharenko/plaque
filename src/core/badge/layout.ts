@@ -32,6 +32,8 @@ export type IconPlacement = {
 	name: string
 	// Path data of a custom icon (then `name` is just a label).
 	d?: string
+	// Line width when the custom path is an outline.
+	stroke?: number
 	x: number
 	y: number
 	size: number
@@ -73,12 +75,18 @@ function baseline(top: number, height: number, size: number): number {
 	return top + Math.round((height / 2 + size * 0.36) * 2) / 2
 }
 
-type IconRef = { name: string; d?: string }
+type IconRef = { name: string; d?: string; stroke?: number }
 
 // The icon the badge was asked for: a custom path or a whitelisted name.
 function iconRefOf(config: BadgeConfig): IconRef | null {
 	if (config.iconPath !== null) {
-		return { name: CUSTOM_ICON_NAME, d: config.iconPath }
+		return config.iconStroke === null
+			? { name: CUSTOM_ICON_NAME, d: config.iconPath }
+			: {
+					name: CUSTOM_ICON_NAME,
+					d: config.iconPath,
+					stroke: config.iconStroke
+				}
 	}
 	return config.icon === null ? null : { name: config.icon }
 }

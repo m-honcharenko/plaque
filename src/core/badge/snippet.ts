@@ -35,8 +35,21 @@ export function badgeUrl(
 		"color",
 		config.color.type === "token" ? config.color.name : config.color.value
 	)
+	if (config.labelColor !== null) {
+		params.set(
+			"label-color",
+			config.labelColor.type === "token"
+				? config.labelColor.name
+				: config.labelColor.value
+		)
+	}
+	if (config.textColor !== null) params.set("text-color", config.textColor)
+	if (config.iconColor !== null) params.set("icon-color", config.iconColor)
 	if (config.icon !== null) params.set("icon", config.icon)
 	if (config.iconPath !== null) params.set("icon-path", config.iconPath)
+	if (config.iconStroke !== null) {
+		params.set("icon-stroke", String(config.iconStroke))
+	}
 	params.set("theme", config.theme)
 	params.set("layout", layout)
 	return `${origin}/badge?${params}`

@@ -52,6 +52,27 @@ describe("custom icon-path (e2e)", () => {
 		expect(res.statusCode).toBe(400)
 	})
 
+	it("draws an outline when icon-stroke is given", async () => {
+		const res = await get(`/badge?value=ok&icon-path=${PATH}&icon-stroke=1.5`)
+		expect(res.statusCode).toBe(200)
+		expect(res.body).toContain('stroke-width="1.5"')
+	})
+
+	it.each([
+		["without a path", "icon-stroke=2"],
+		["out of range", `icon-path=${PATH}&icon-stroke=9`],
+		["not a number", `icon-path=${PATH}&icon-stroke=thick`]
+	])("answers 400 for icon-stroke %s", async (_name, query) => {
+		const res = await get(`/badge?value=ok&${query}`)
+		expect(res.statusCode).toBe(400)
+	})
+
+	it("carries the line width into the snippet URLs", async () => {
+		const res = await get(`/snippet?value=ok&icon-path=${PATH}&icon-stroke=2`)
+		expect(res.statusCode).toBe(200)
+		expect(res.body).toContain("icon-stroke=2")
+	})
+
 	it("carries the path into the snippet URLs", async () => {
 		const res = await get(`/snippet?value=ok&icon-path=${PATH}`)
 		expect(res.statusCode).toBe(200)
