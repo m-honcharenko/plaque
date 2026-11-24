@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { resolve } from "node:path"
+import { join, resolve } from "node:path"
 
 import fastifyStatic from "@fastify/static"
 import type { NestFastifyApplication } from "@nestjs/platform-fastify"
@@ -7,6 +7,9 @@ import type { NestFastifyApplication } from "@nestjs/platform-fastify"
 // Where `bun run build:web` puts the bundle. Relative to the working
 // directory, which is the repo root in development and /app in Docker.
 export const DEFAULT_WEB_DIR = "dist/web"
+
+// The builder page, below the root of the bundle.
+const BUILDER_PAGE = "builder/index.html"
 
 const HTML_CACHE = "no-cache"
 // Bun puts a content hash in every asset name, so assets never change.
@@ -32,5 +35,14 @@ export async function setupWeb(
 			)
 		}
 	})
+	// The folder URL with no slash would be a 404 (or an empty route in the
+	// plugin), so the builder gets its own route. Its assets are relative
+	// (../chunk-x.js), which resolve the same with or without the slash.
+	if (existsSync(join(root, BUILDER_PAGE))) {
+		app
+			.getHttpAdapter()
+			.getInstance()
+			.get("/builder", (_request, reply) => reply.sendFile(BUILDER_PAGE))
+	}
 	return true
 }

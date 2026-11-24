@@ -1,6 +1,6 @@
 import type { Theme } from "../../../src/core/badge/badge-options.js"
 import type { Result } from "../build.js"
-import { card } from "../ui.js"
+import { autoSurface, card } from "../ui.js"
 
 type PreviewProps = {
 	// The images come from the service serving this page.
@@ -8,11 +8,9 @@ type PreviewProps = {
 	theme: Theme
 }
 
-// A forced theme gets the background it is meant for. "auto" follows the
-// system, like the badge itself, so it uses the media query and not the
-// page theme (the "dark:" variant).
+// A forced theme gets the background it is meant for.
 const BACKGROUND: Record<Theme, string> = {
-	auto: "bg-neutral-50 text-neutral-900 [@media(prefers-color-scheme:dark)]:bg-neutral-900 [@media(prefers-color-scheme:dark)]:text-neutral-100",
+	auto: autoSurface,
 	light: "bg-white text-neutral-900",
 	dark: "bg-[#0d1117] text-neutral-100"
 }
