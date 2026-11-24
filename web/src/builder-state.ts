@@ -15,6 +15,7 @@ import {
 	type NarrowLayout
 } from "../../src/core/badge/snippet.js"
 import { isIconName } from "../../src/core/icons/icons.js"
+import type { GithubMetric } from "../../src/core/ports/value-provider.port.js"
 
 // One side of the badge: left alone ("auto"), a token or a hex color.
 export type ColorMode = "auto" | "token" | "custom"
@@ -32,8 +33,14 @@ export function colorParam(choice: ColorChoice): string | undefined {
 	return choice.mode === "token" ? choice.token : choice.hex
 }
 
+// Where the value comes from: typed by hand, or followed live.
+export const SOURCES = ["static", "github", "npm"] as const
+export type Source = (typeof SOURCES)[number]
+
 export const ICON_SOURCES = ["library", "custom"] as const
-export type IconSource = (typeof ICON_SOURCES)[number]
+// A live badge can also keep the icon of its metric ("auto").
+export const LIVE_ICON_SOURCES = ["auto", "library", "custom"] as const
+export type IconSource = (typeof LIVE_ICON_SOURCES)[number]
 
 export const NARROW_CHOICES = ["auto", "compact", "vertical"] as const
 export type NarrowChoice = (typeof NARROW_CHOICES)[number]
@@ -45,6 +52,13 @@ export function forcedNarrow(choice: NarrowChoice): NarrowLayout | undefined {
 // What the form holds. Everything is raw input; validate() turns it into a
 // BadgeConfig or a list of problems.
 export type BuilderState = {
+	source: Source
+	// A live badge: "owner/repo" or a GitHub link, the metric to follow, or
+	// an npm package name.
+	repo: string
+	metric: GithubMetric
+	pkg: string
+	// Empty means "the default": the metric's name on a live badge.
 	label: string
 	value: string
 	// Right (or bottom) side. Auto: success, or a shade of the label color.
@@ -73,6 +87,8 @@ export type BuilderState = {
 export type Field =
 	| "label"
 	| "value"
+	| "repo"
+	| "pkg"
 	| "color"
 	| "labelColor"
 	| "icon"
@@ -93,6 +109,10 @@ export type Validation =
 
 export function defaultState(origin: string): BuilderState {
 	return {
+		source: "static",
+		repo: "",
+		metric: "stars",
+		pkg: "",
 		label: "build",
 		value: "passing",
 		valueColor: { mode: "auto", token: "success", hex: "1a7f37" },
@@ -122,17 +142,15 @@ export function cleanOrigin(raw: string): string | null {
 	}
 }
 
-// The same rules as the API, so the preview never shows an "invalid params"
-// badge for something the form allowed.
-export function validate(state: BuilderState): Validation {
+// What both kinds of badge check the same way. The origin comes back
+// cleaned, or null when it is not a URL.
+export function checkCommon(state: BuilderState): {
+	errors: Errors
+	origin: string | null
+} {
 	const errors: Errors = {}
 	if (state.label.length > LIMITS.label) {
 		errors.label = `Up to ${LIMITS.label} characters`
-	}
-	if (state.value.trim() === "") {
-		errors.value = "Required"
-	} else if (state.value.length > LIMITS.value) {
-		errors.value = `Up to ${LIMITS.value} characters`
 	}
 	if (
 		state.valueColor.mode === "custom" &&
@@ -162,6 +180,43 @@ export function validate(state: BuilderState): Validation {
 	}
 	const origin = cleanOrigin(state.origin)
 	if (origin === null) errors.origin = "Use a full http(s) URL"
+	return { errors, origin }
+}
+
+// Moving between typed and live values keeps what still makes sense: the
+// default label and the icon source differ between the two.
+export function switchSource(
+	state: BuilderState,
+	source: Source
+): BuilderState {
+	const live = source !== "static"
+	if (live === (state.source !== "static")) return { ...state, source }
+	if (live) {
+		return {
+			...state,
+			source,
+			label: state.label === "build" ? "" : state.label,
+			iconSource: state.iconSource === "custom" ? "custom" : "auto"
+		}
+	}
+	return {
+		...state,
+		source,
+		label: state.label === "" ? "build" : state.label,
+		iconSource: state.iconSource === "custom" ? "custom" : "library"
+	}
+}
+
+// The same rules as the API, so the preview never shows an "invalid params"
+// badge for something the form allowed. This is the typed kind; the live
+// kind is checked in build.ts.
+export function validate(state: BuilderState): Validation {
+	const { errors, origin } = checkCommon(state)
+	if (state.value.trim() === "") {
+		errors.value = "Required"
+	} else if (state.value.length > LIMITS.value) {
+		errors.value = `Up to ${LIMITS.value} characters`
+	}
 
 	if (origin === null || Object.keys(errors).length > 0) {
 		return { ok: false, errors }

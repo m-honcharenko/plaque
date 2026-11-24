@@ -1,11 +1,10 @@
 import { useEffect, useState } from "preact/hooks"
 
-import { renderSnippet } from "../../../src/core/badge/snippet.js"
-import type { Validation } from "../builder-state.js"
+import type { Result } from "../build.js"
 import { button, card } from "../ui.js"
 
 type SnippetOutputProps = {
-	result: Validation
+	result: Result
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -27,13 +26,7 @@ export function SnippetOutput({ result }: SnippetOutputProps) {
 		return () => clearTimeout(timer)
 	}, [copy])
 
-	const snippet = result.ok
-		? renderSnippet(result.config, {
-				origin: result.origin,
-				breakpoint: result.breakpoint,
-				narrow: result.narrow
-			})
-		: null
+	const snippet = result.ok ? result.snippet : null
 
 	return (
 		<section
@@ -78,6 +71,9 @@ export function SnippetOutput({ result }: SnippetOutputProps) {
 			<p class="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
 				Paste it into README.md. On screens narrower than the breakpoint GitHub
 				shows the narrow badge.
+				{result.ok && result.live
+					? " The badge follows the live value; GitHub and npm answers are cached for a few minutes."
+					: ""}
 			</p>
 		</section>
 	)
