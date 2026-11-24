@@ -16,8 +16,19 @@ export function createAdapter(): FastifyAdapter {
 	return new FastifyAdapter({
 		// Behind a proxy the client address comes from X-Forwarded-For.
 		trustProxy: process.env.TRUST_PROXY === "true",
-		bodyLimit: MAX_BODY_BYTES
+		bodyLimit: MAX_BODY_BYTES,
+		// The default of 100 would answer 414 (not a badge) for a long npm
+		// name; the longest valid one is 214 characters.
+		routerOptions: { maxParamLength: 256 }
 	})
+}
+
+// The routes that answer with a badge, so an oversized request to them gets
+// a badge too.
+function isBadgePath(path: string): boolean {
+	return (
+		path === "/badge" || path.startsWith("/gh/") || path.startsWith("/npm/")
+	)
 }
 
 // HTTP behavior shared by main.ts and the e2e tests.
@@ -38,8 +49,8 @@ export async function setupHttp(app: NestFastifyApplication): Promise<void> {
 			const problem = checkRequestLimits(url)
 			if (problem === null) return
 			reply.status(problem.status)
-			// The badge endpoint always answers with a badge.
-			if (url.split("?")[0] === "/badge") {
+			// The badge endpoints always answer with a badge.
+			if (isBadgePath(url.split("?")[0] ?? "")) {
 				return reply
 					.header("Content-Type", "image/svg+xml; charset=utf-8")
 					.header("Cache-Control", "public, max-age=60")

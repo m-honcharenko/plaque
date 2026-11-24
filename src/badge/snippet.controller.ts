@@ -11,13 +11,7 @@ import type { FastifyRequest } from "fastify"
 import { normalizeConfig } from "../core/badge/badge-config.js"
 import { DEFAULT_BREAKPOINT, renderSnippet } from "../core/badge/snippet.js"
 import { SnippetQueryDto } from "./dto/snippet-query.dto.js"
-
-// PUBLIC_URL wins so the snippet points at the right host behind a proxy.
-function originOf(request: FastifyRequest): string {
-	const configured = process.env.PUBLIC_URL
-	const origin = configured ?? `${request.protocol}://${request.host}`
-	return origin.replace(/\/+$/, "")
-}
+import { originOf } from "./origin.js"
 
 @ApiTags("badge")
 @Controller("snippet")
