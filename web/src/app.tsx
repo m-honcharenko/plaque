@@ -2,12 +2,17 @@ import { useState } from "preact/hooks"
 
 import { LIMITS, THEMES } from "../../src/core/badge/badge-options.js"
 import { BREAKPOINT_RANGE } from "../../src/core/badge/snippet.js"
+import { GITHUB_METRICS } from "../../src/core/ports/value-provider.port.js"
+import { build } from "./build.js"
 import {
 	ICON_SOURCES,
+	LIVE_ICON_SOURCES,
 	NARROW_CHOICES,
+	SOURCES,
 	defaultState,
-	validate,
-	type BuilderState
+	switchSource,
+	type BuilderState,
+	type IconSource
 } from "./builder-state.js"
 import { ColorPicker } from "./components/color-picker.js"
 import { CustomIcon } from "./components/custom-icon.js"
@@ -21,6 +26,14 @@ import { ThemeSwitch } from "./components/theme-switch.js"
 import { card, input, inputError } from "./ui.js"
 import { useDebounced } from "./use-debounced.js"
 import { useUiTheme } from "./use-ui-theme.js"
+
+const SOURCE_LABELS = { static: "Typed", github: "GitHub", npm: "npm" }
+const METRIC_LABELS = {
+	stars: "Stars",
+	ci: "CI",
+	release: "Release",
+	license: "License"
+}
 
 function inputClass(error: string | undefined): string {
 	return `${input} ${error === undefined ? "" : inputError}`
@@ -37,9 +50,13 @@ export function App() {
 
 	// The code reacts at once; the preview waits for a pause in typing so it
 	// does not request a new badge on every key.
-	const live = validate(state)
-	const settled = validate(useDebounced(state, 250))
+	const live = build(state, pageOrigin)
+	const settled = build(useDebounced(state, 250), pageOrigin)
 	const errors = live.ok ? {} : live.errors
+	const following = state.source !== "static"
+	const iconSources: readonly IconSource[] = following
+		? LIVE_ICON_SOURCES
+		: ICON_SOURCES
 
 	return (
 		<main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -60,7 +77,6 @@ export function App() {
 				<div class="lg:col-start-2 lg:row-start-1">
 					<Preview
 						result={live.ok ? settled : live}
-						origin={pageOrigin}
 						theme={state.theme}
 					/>
 				</div>
@@ -70,43 +86,112 @@ export function App() {
 					onSubmit={(event) => event.preventDefault()}
 					noValidate
 				>
+					<Segmented
+						legend="Value"
+						options={SOURCES}
+						labels={SOURCE_LABELS}
+						value={state.source}
+						onChange={(source) => setState((now) => switchSource(now, source))}
+					/>
+
+					{state.source === "github" ? (
+						<div class="space-y-6">
+							<Field
+								id="repo"
+								label="Repository"
+								error={errors.repo}
+								hint="owner/repo or a link to the repository."
+							>
+								<input
+									id="repo"
+									type="text"
+									value={state.repo}
+									placeholder="oven-sh/bun"
+									autocomplete="off"
+									spellcheck={false}
+									aria-invalid={errors.repo !== undefined}
+									onInput={(event) =>
+										patch({ repo: event.currentTarget.value })
+									}
+									class={inputClass(errors.repo)}
+								/>
+							</Field>
+							<Segmented
+								legend="What to show"
+								options={GITHUB_METRICS}
+								labels={METRIC_LABELS}
+								value={state.metric}
+								onChange={(metric) => patch({ metric })}
+							/>
+						</div>
+					) : null}
+
+					{state.source === "npm" ? (
+						<Field
+							id="pkg"
+							label="Package"
+							error={errors.pkg}
+							hint="The latest version on npm, for example @nestjs/core."
+						>
+							<input
+								id="pkg"
+								type="text"
+								value={state.pkg}
+								placeholder="react"
+								autocomplete="off"
+								spellcheck={false}
+								aria-invalid={errors.pkg !== undefined}
+								onInput={(event) => patch({ pkg: event.currentTarget.value })}
+								class={inputClass(errors.pkg)}
+							/>
+						</Field>
+					) : null}
+
 					<div class="grid gap-6 sm:grid-cols-2">
 						<Field
 							id="label"
 							label="Label"
 							aside={`${state.label.length}/${LIMITS.label}`}
 							error={errors.label}
-							hint="Left text. Leave empty for none."
+							hint={
+								following
+									? "Left text. Leave empty for the default."
+									: "Left text. Leave empty for none."
+							}
 						>
 							<input
 								id="label"
 								type="text"
 								value={state.label}
-								placeholder="build"
+								placeholder={following ? "default" : "build"}
 								autocomplete="off"
 								aria-invalid={errors.label !== undefined}
 								onInput={(event) => patch({ label: event.currentTarget.value })}
 								class={inputClass(errors.label)}
 							/>
 						</Field>
-						<Field
-							id="value"
-							label="Value"
-							aside={`${state.value.length}/${LIMITS.value}`}
-							error={errors.value}
-							hint="Right text: a status or a piece of data."
-						>
-							<input
+						{following ? null : (
+							<Field
 								id="value"
-								type="text"
-								value={state.value}
-								placeholder="passing"
-								autocomplete="off"
-								aria-invalid={errors.value !== undefined}
-								onInput={(event) => patch({ value: event.currentTarget.value })}
-								class={inputClass(errors.value)}
-							/>
-						</Field>
+								label="Value"
+								aside={`${state.value.length}/${LIMITS.value}`}
+								error={errors.value}
+								hint="Right text: a status or a piece of data."
+							>
+								<input
+									id="value"
+									type="text"
+									value={state.value}
+									placeholder="passing"
+									autocomplete="off"
+									aria-invalid={errors.value !== undefined}
+									onInput={(event) =>
+										patch({ value: event.currentTarget.value })
+									}
+									class={inputClass(errors.value)}
+								/>
+							</Field>
+						)}
 					</div>
 
 					<ColorPicker
@@ -119,7 +204,11 @@ export function App() {
 
 					<ColorPicker
 						legend="Right side color"
-						autoHint="Auto: green, or a darker shade of the left color."
+						autoHint={
+							following
+								? "Auto: follows the value, for example red when CI fails."
+								: "Auto: green, or a darker shade of the left color."
+						}
 						value={state.valueColor}
 						error={errors.color}
 						onChange={(valueColor) => patch({ valueColor })}
@@ -141,14 +230,19 @@ export function App() {
 					<div>
 						<Segmented
 							legend="Icon"
-							options={ICON_SOURCES}
+							options={iconSources}
 							value={state.iconSource}
 							onChange={(iconSource) => patch({ iconSource })}
 						/>
 						<div class="mt-3">
-							{state.iconSource === "library" ? (
+							{state.iconSource === "auto" ? (
+								<p class="text-sm text-neutral-500 dark:text-neutral-400">
+									Auto: the icon of the metric, for example a star for stars.
+								</p>
+							) : state.iconSource === "library" ? (
 								<IconPicker
 									value={state.icon}
+									allowNone={!following}
 									onChange={(icon) => patch({ icon })}
 								/>
 							) : (
@@ -178,18 +272,26 @@ export function App() {
 						onChange={(theme) => patch({ theme })}
 					/>
 
-					<div>
-						<Segmented
-							legend="Narrow screen look"
-							options={NARROW_CHOICES}
-							value={state.narrow}
-							onChange={(narrow) => patch({ narrow })}
-						/>
-						<p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-							Auto: a status like "passing" becomes an icon (compact), data like
-							"v2.4.1" stacks under the icon (vertical).
+					{following ? (
+						<p class="text-sm text-neutral-500 dark:text-neutral-400">
+							Narrow screen look: CI is a status, so it becomes an icon
+							(compact). Stars, release, license and version are data, so they
+							stack under the icon (vertical).
 						</p>
-					</div>
+					) : (
+						<div>
+							<Segmented
+								legend="Narrow screen look"
+								options={NARROW_CHOICES}
+								value={state.narrow}
+								onChange={(narrow) => patch({ narrow })}
+							/>
+							<p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+								Auto: a status like "passing" becomes an icon (compact), data
+								like "v2.4.1" stacks under the icon (vertical).
+							</p>
+						</div>
+					)}
 
 					<details class="group rounded-lg border border-neutral-300 dark:border-neutral-700">
 						<summary class="cursor-pointer rounded-lg px-4 py-3 text-sm font-medium select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/50">

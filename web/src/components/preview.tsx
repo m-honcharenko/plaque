@@ -1,12 +1,10 @@
 import type { Theme } from "../../../src/core/badge/badge-options.js"
-import { badgeUrl } from "../../../src/core/badge/snippet.js"
-import type { Validation } from "../builder-state.js"
+import type { Result } from "../build.js"
 import { card } from "../ui.js"
 
 type PreviewProps = {
-	result: Validation
-	// Where the preview images come from: the service serving this page.
-	origin: string
+	// The images come from the service serving this page.
+	result: Result
 	theme: Theme
 }
 
@@ -43,7 +41,7 @@ function Row({
 	)
 }
 
-export function Preview({ result, origin, theme }: PreviewProps) {
+export function Preview({ result, theme }: PreviewProps) {
 	return (
 		<section
 			aria-labelledby="preview-title"
@@ -62,8 +60,8 @@ export function Preview({ result, origin, theme }: PreviewProps) {
 						note={`over ${result.breakpoint} px, full`}
 					>
 						<img
-							src={badgeUrl(origin, result.config, "full")}
-							alt={`${result.config.label} ${result.config.value}`}
+							src={result.wideUrl}
+							alt={result.alt}
 							class="max-w-none"
 						/>
 					</Row>
@@ -72,8 +70,8 @@ export function Preview({ result, origin, theme }: PreviewProps) {
 						note={`up to ${result.breakpoint} px, ${result.narrow}`}
 					>
 						<img
-							src={badgeUrl(origin, result.config, result.narrow)}
-							alt={`${result.config.label} ${result.config.value}, narrow`}
+							src={result.narrowUrl}
+							alt={`${result.alt}, narrow`}
 							class="max-w-none"
 						/>
 					</Row>

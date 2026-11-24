@@ -3,6 +3,8 @@ import { ICON_NAMES, getIcon } from "../../../src/core/icons/icons.js"
 type IconPickerProps = {
 	value: string | null
 	onChange: (icon: string | null) => void
+	// A live badge cannot ask for "no icon", so it hides the button.
+	allowNone?: boolean
 }
 
 function IconGlyph({ name }: { name: string }) {
@@ -31,24 +33,30 @@ function cellState(active: boolean): string {
 }
 
 // Every whitelisted icon as a button, plus "none".
-export function IconPicker({ value, onChange }: IconPickerProps) {
+export function IconPicker({
+	value,
+	onChange,
+	allowNone = true
+}: IconPickerProps) {
 	return (
 		<fieldset>
 			<div class="flex items-baseline justify-end gap-2">
 				<legend class="sr-only">Library icon</legend>
 				<span class="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-					{value ?? "none"}
+					{value ?? (allowNone ? "none" : "choose one")}
 				</span>
 			</div>
 			<div class="mt-1 grid grid-cols-6 gap-1.5 sm:grid-cols-8">
-				<button
-					type="button"
-					aria-pressed={value === null}
-					onClick={() => onChange(null)}
-					class={`${cell} ${cellState(value === null)}`}
-				>
-					None
-				</button>
+				{allowNone ? (
+					<button
+						type="button"
+						aria-pressed={value === null}
+						onClick={() => onChange(null)}
+						class={`${cell} ${cellState(value === null)}`}
+					>
+						None
+					</button>
+				) : null}
 				{ICON_NAMES.map((name) => (
 					<button
 						key={name}
