@@ -1,31 +1,12 @@
-import { useEffect, useState } from "preact/hooks"
-
 import type { Result } from "../build.js"
-import { button, card } from "../ui.js"
+import { card } from "../ui.js"
+import { CopyButton } from "./copy-button.js"
 
 type SnippetOutputProps = {
 	result: Result
 }
 
-async function copyText(text: string): Promise<boolean> {
-	try {
-		await navigator.clipboard.writeText(text)
-		return true
-	} catch {
-		return false
-	}
-}
-
-type CopyState = "idle" | "copied" | "failed"
-
 export function SnippetOutput({ result }: SnippetOutputProps) {
-	const [copy, setCopy] = useState<CopyState>("idle")
-	useEffect(() => {
-		if (copy === "idle") return
-		const timer = setTimeout(() => setCopy("idle"), 2000)
-		return () => clearTimeout(timer)
-	}, [copy])
-
 	const snippet = result.ok ? result.snippet : null
 
 	return (
@@ -40,21 +21,7 @@ export function SnippetOutput({ result }: SnippetOutputProps) {
 				>
 					Code for your .md file
 				</h2>
-				<button
-					type="button"
-					disabled={snippet === null}
-					onClick={async () => {
-						if (snippet === null) return
-						setCopy((await copyText(snippet)) ? "copied" : "failed")
-					}}
-					class={`${button} border-neutral-300 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-800`}
-				>
-					{copy === "copied"
-						? "Copied"
-						: copy === "failed"
-							? "Select and copy"
-							: "Copy"}
-				</button>
+				<CopyButton text={snippet} />
 			</div>
 			{snippet === null ? (
 				<p class="mt-4 text-sm text-neutral-500 dark:text-neutral-400">

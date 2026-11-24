@@ -66,7 +66,14 @@ export function App() {
 		<main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
 			<header class="flex items-start justify-between gap-4">
 				<div>
-					<h1 class="text-3xl font-bold tracking-tight sm:text-5xl">Plaque</h1>
+					<h1 class="text-3xl font-bold tracking-tight sm:text-5xl">
+						<a
+							href="/"
+							class="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/50"
+						>
+							Plaque
+						</a>
+					</h1>
 					<p class="mt-3 max-w-2xl text-base text-neutral-600 sm:text-lg dark:text-neutral-400">
 						Build a badge for your README that adapts to the reader's screen.
 					</p>

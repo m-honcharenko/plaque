@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -21,6 +21,11 @@ describe("web app (e2e)", () => {
 		writeFileSync(
 			join(dir, "index.html"),
 			"<!doctype html><title>Plaque</title>"
+		)
+		mkdirSync(join(dir, "builder"))
+		writeFileSync(
+			join(dir, "builder", "index.html"),
+			"<!doctype html><title>Builder</title>"
 		)
 		writeFileSync(join(dir, "index-abc123.js"), "console.log(1)")
 		const moduleRef = await Test.createTestingModule({
@@ -45,6 +50,22 @@ describe("web app (e2e)", () => {
 		expect(res.headers["content-type"]).toContain("text/html")
 		expect(res.headers["cache-control"]).toBe("no-cache")
 		expect(res.body).toContain("Plaque")
+	})
+
+	it("serves the builder at /builder/ without caching it", async () => {
+		const res = await app.inject({ method: "GET", url: "/builder/" })
+		expect(res.statusCode).toBe(200)
+		expect(res.headers["cache-control"]).toBe("no-cache")
+		expect(res.body).toContain("Builder")
+	})
+
+	it("serves the builder at /builder too, the same page", async () => {
+		const slash = await app.inject({ method: "GET", url: "/builder/" })
+		const bare = await app.inject({ method: "GET", url: "/builder" })
+		expect(bare.statusCode).toBe(200)
+		expect(bare.headers["content-type"]).toContain("text/html")
+		expect(bare.headers["cache-control"]).toBe("no-cache")
+		expect(bare.body).toBe(slash.body)
 	})
 
 	it("serves hashed assets as immutable", async () => {

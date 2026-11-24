@@ -7,7 +7,7 @@ async function build(): Promise<boolean> {
 	// Old hashed files would pile up otherwise.
 	rmSync("dist/web", { recursive: true, force: true })
 	const result = await Bun.build({
-		entrypoints: ["web/index.html"],
+		entrypoints: ["web/index.html", "web/builder/index.html"],
 		outdir: "dist/web",
 		minify: true,
 		plugins: [tailwind]
