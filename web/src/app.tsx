@@ -19,12 +19,15 @@ import { CustomIcon } from "./components/custom-icon.js"
 import { Field } from "./components/field.js"
 import { IconPicker } from "./components/icon-picker.js"
 import { InkPicker } from "./components/ink-picker.js"
+import { Presets } from "./components/presets.js"
 import { Preview } from "./components/preview.js"
 import { Segmented } from "./components/segmented.js"
 import { SnippetOutput } from "./components/snippet-output.js"
 import { ThemeSwitch } from "./components/theme-switch.js"
+import { applyPreset } from "./presets.js"
 import { card, input, inputError } from "./ui.js"
 import { useDebounced } from "./use-debounced.js"
+import { usePresets } from "./use-presets.js"
 import { useUiTheme } from "./use-ui-theme.js"
 
 const SOURCE_LABELS = { static: "Typed", github: "GitHub", npm: "npm" }
@@ -45,6 +48,7 @@ export function App() {
 	const [state, setState] = useState<BuilderState>(() =>
 		defaultState(pageOrigin)
 	)
+	const presets = usePresets()
 	const patch = (change: Partial<BuilderState>) =>
 		setState((current) => ({ ...current, ...change }))
 
@@ -86,6 +90,12 @@ export function App() {
 					onSubmit={(event) => event.preventDefault()}
 					noValidate
 				>
+					<Presets
+						saved={presets.saved}
+						onApply={(preset) => setState((now) => applyPreset(now, preset))}
+						onSave={(name) => presets.save(name, state)}
+						onRemove={presets.remove}
+					/>
 					<Segmented
 						legend="Value"
 						options={SOURCES}
