@@ -36,3 +36,5 @@ export interface ValueProvider {
 	// Resolves with the value or rejects with a ValueError.
 	fetch(query: ValueQuery): Promise<ProvidedValue>
 }
+
+export const VALUE_PROVIDER = Symbol("VALUE_PROVIDER")
